@@ -1,4 +1,7 @@
 <?php
+
+require_once("NPLib_Object.php");
+
 $npsql_dbconfig = null;
 
 function __createSELECT_Column($colName, $sqlType) {
@@ -50,20 +53,20 @@ function __createSELECT_AllColumns($obj, $field, $ddbb_mapping, $ddbb_types, &$f
 
 function NP_createSELECT($obj, $ddbb_table, $ddbb_mapping, $ddbb_types, $whereCondition) {
     
-    $isFirst = true;
+   $isFirst = true;
 	$sql = "SELECT ";
 	$sql .= __createSELECT_AllColumns($obj, null, $ddbb_mapping, $ddbb_types, $isFirst);
 	$sql .= " FROM ".$ddbb_table." WHERE ".$whereCondition;
     
-    return $sql;
+   return $sql;
 }
 
 function NP_loadData(&$obj, &$data, $ddbb_mapping, $ddbb_types) {
-    
-	foreach (array_keys($data) as $dbFieldName) {
+   //$object_name = get_class($object);
+	foreach (array_keys($ddbb_mapping) as $dbFieldName) {
 		
 		$objectFieldName = _obtainKeyForValue($ddbb_mapping, $dbFieldName);
-		
+
 		if ($objectFieldName == null) {
 		    return;
 		}
@@ -89,6 +92,58 @@ function NP_loadData(&$obj, &$data, $ddbb_mapping, $ddbb_types) {
 		}
 		
 	}
+}
+
+function NP_insertObject($object, $ddbb_table, $ddbb_mapping, $ddbb_types) {    	
+		$varNames = "";
+		$varValues = "";
+		$first = true;	
+		$object_name = get_class($object);
+		
+		foreach (get_object_vars($object) as $var => $value) {
+			if (array_key_exists($var, $ddbb_mapping[$object_name])) {
+				if (is_array($ddbb_mapping[$object_name][$var])) {
+					foreach (get_object_vars($this->$var) as $objvar => $objvalue) {
+						if (array_key_exists($objvar, $ddbb_mapping[$object_name][$var])) {
+							if (is_array($ddbb_mapping[$object_name][$var][$objvar])) {
+								foreach ($this->$var->$objvar as $subobjvar => $subobjvalue) {
+									if (!$first) {
+										$varNames .= ", ";
+										$varValues .= ", ";
+									} else
+										$first = false;
+									$varNames .= $ddbb_mapping[$object_name][$var][$objvar][$subobjvar];
+									$varValues .= encodeSQLValue($subobjvalue, $ddbb_types[$object_name][$var][$objvar][$subobjvar]);
+								}
+							} else {
+								if (!$first) {
+									$varNames .= ", ";
+									$varValues .= ", ";
+								} else
+									$first = false;
+								$varNames .= $ddbb_mapping[$object_name][$var][$objvar];
+								$varValues .= encodeSQLValue($objvalue, $ddbb_types[$object_name][$var][$objvar]);
+							}
+						}
+					}
+				} else {
+					if ($value != null) {
+						if (!$first) {
+							$varNames .= ", ";
+							$varValues .= ", ";
+						} else
+							$first = false;
+						$varNames .= $ddbb_mapping[$object_name][$var];
+						$varValues .= encodeSQLValue($value, $ddbb_types[$object_name][$var]);
+					}
+				}
+			} else {
+				//TODO: ERROR
+			}
+		}
+		$sql = "INSERT INTO ".$ddbb_table[$object_name]." ($varNames) VALUES ($varValues)";	
+		
+		return NP_executeInsertUpdate($sql);
 }
 
 function encodeSQLValue($strVal, $sqlType) {

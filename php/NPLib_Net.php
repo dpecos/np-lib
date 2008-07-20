@@ -44,4 +44,20 @@ function sendHTMLMail($from, $to, $subject, $body) {
 
     return $result;
 }
+
+function get_referer() {
+    if (isset($_SERVER['HTTP_REFERER']))
+        $referer = $_SERVER['HTTP_REFERER'];
+    else if (isset($_ENV['HTTP_REFERER']))
+        $referer = $_ENV['HTTP_REFERER'];
+    else 
+        return null;
+	$referer = split("/", $referer);
+	$referer = $referer[sizeof($referer)-1];
+	$index = strpos($referer, "?");
+	if ($index > 0) {
+		$referer = substr($referer, 0, $index);
+	}
+	return $referer;
+}
 ?>
