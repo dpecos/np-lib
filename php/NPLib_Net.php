@@ -1,20 +1,20 @@
 <?php
-require_once(APP_ROOT."/lib/mail/htmlMimeMail.php");
+require_once("mail/htmlMimeMail.php");
 
 function redirect($page) {
-    if (isset($_ENV['HTTP_HOST'])) {
-	    $host  = $_ENV['HTTP_HOST'];
-	    if (endsWith($_ENV["SCRIPT_URL"], ".php"))
-	        $uri  = rtrim(dirname($_ENV["SCRIPT_URL"]), '/\\');
-	    else
-	        $uri  = rtrim($_ENV["SCRIPT_URL"], '/\\');
-    } else {
-        $host  = $_SERVER['HTTP_HOST'];
-        if (endsWith($_SERVER["SCRIPT_NAME"], ".php"))
-	        $uri  = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-	    else
-	        $uri  = rtrim($_SERVER['PHP_SELF'], '/\\');
-    }
+   if (isset($_ENV['HTTP_HOST'])) {
+    $host  = $_ENV['HTTP_HOST'];
+    if (endsWith($_ENV["SCRIPT_URL"], ".php"))
+        $uri  = rtrim(dirname($_ENV["SCRIPT_URL"]), '/\\');
+    else
+        $uri  = rtrim($_ENV["SCRIPT_URL"], '/\\');
+   } else {
+     $host  = $_SERVER['HTTP_HOST'];
+     if (endsWith($_SERVER["SCRIPT_NAME"], ".php"))
+        $uri  = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+    else
+        $uri  = rtrim($_SERVER['PHP_SELF'], '/\\');
+   }
 	header("Location: http://$host$uri/$page");
 	exit;
 }

@@ -1,7 +1,5 @@
 <?php
 
-require_once("NPLib_Object.php");
-
 $npsql_dbconfig = null;
 
 function __createSELECT_Column($colName, $sqlType) {
