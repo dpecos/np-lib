@@ -61,8 +61,8 @@ function NP_createSELECT($obj, $ddbb_table, $ddbb_mapping, $ddbb_types, $whereCo
 
 function NP_loadData(&$obj, &$data, $ddbb_mapping, $ddbb_types) {
    //$object_name = get_class($object);
-	foreach (array_keys($ddbb_mapping) as $dbFieldName) {
-		
+	foreach (array_values($ddbb_mapping) as $dbFieldName) {
+	
 		$objectFieldName = _obtainKeyForValue($ddbb_mapping, $dbFieldName);
 
 		if ($objectFieldName == null) {
@@ -125,7 +125,7 @@ function NP_insertObject($object, $ddbb_table, $ddbb_mapping, $ddbb_types) {
 						}
 					}
 				} else {
-					if ($value != null) {
+					if ($value !== null) {
 						if (!$first) {
 							$varNames .= ", ";
 							$varValues .= ", ";
@@ -145,7 +145,7 @@ function NP_insertObject($object, $ddbb_table, $ddbb_mapping, $ddbb_types) {
 }
 
 function encodeSQLValue($strVal, $sqlType) {
-	if (isset($strVal) && $strVal != null) {
+	if (isset($strVal) && $strVal !== null) {
 		if ($sqlType == "STRING") 
 			return "'".$strVal."'";
 		else if ($sqlType == "BOOL") {
@@ -173,7 +173,7 @@ function encodeSQLValue($strVal, $sqlType) {
 }
 
 function decodeSQLValue($strVal, $sqlType) {
-	if (isset($strVal) && $strVal != null) {
+	if (isset($strVal) && $strVal !== null) {
 		if ($sqlType == "STRING") 
 			return $strVal;
 		else if ($sqlType == "BOOL") 
@@ -249,8 +249,8 @@ function NP_executePKSelect($sql) {
 	return $datos;
 }
 
-function NP_executeSelect($sql, $f, $params = NULL) {
-	if ($params == NULL)
+function NP_executeSelect($sql, $f, $params = null) {
+	if ($params == null)
 		$params = array();
 
 	$con = __NP_connectSQL();
