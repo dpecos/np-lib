@@ -78,11 +78,20 @@ function NP_loadData(&$obj, &$data, $ddbb_mapping, $ddbb_types) {
 		    }
 		    
 		} else {
-		        
-		    if (is_object($obj)) {
-    			$obj->$objectFieldName = decodeSQLValue($data[$dbFieldName], $ddbb_types[$objectFieldName]);	
-			} else if (is_array($obj)) {
-    			$obj[$objectFieldName] = decodeSQLValue($data[$dbFieldName], $ddbb_types[$objectFieldName]);	
+		    if (is_array($data)) {  
+		       if (is_object($obj)) {
+		         if (in_array($dbFieldName, array_keys($data))) {
+       			   $obj->$objectFieldName = decodeSQLValue($data[$dbFieldName], $ddbb_types[$objectFieldName]);	
+       			} else {
+          			$obj->$objectFieldName = decodeSQLValue(null, $ddbb_types[$objectFieldName]);	
+       			}
+			   } else if (is_array($obj)) {
+               if (in_array($dbFieldName, array_keys($data))) {
+       			   $obj[$objectFieldName] = decodeSQLValue($data[$dbFieldName], $ddbb_types[$objectFieldName]);	
+       			} else {
+       				$obj[$objectFieldName] = decodeSQLValue(null, $ddbb_types[$objectFieldName]);	
+       			}
+			   }
 			}
 			
 			unset($data[$dbFieldName]);
@@ -191,19 +200,20 @@ function decodeSQLValue($strVal, $sqlType) {
 				return number_format((float)$strVal, 2, '.', '');
 			else 
 				return 0;
-	    else if ($sqlType == "DATE")
+	    else if ($sqlType == "DATE") {
 	        if (isset($strVal) && $strVal != "") {
-	            $year = substr($strVal,0,4);
-                $mon  = substr($strVal,4,2);
-                $day  = substr($strVal,6,2);
-                $hour = substr($strVal,8,2);
-                $min  = substr($strVal,10,2);
-                $sec  = substr($strVal,12,2);
+	             $year = substr($strVal,0,4);
+                $mon  = substr($strVal,5,2);
+                $day  = substr($strVal,8,2);
+                $hour = substr($strVal,11,2);
+                $min  = substr($strVal,14,2);
+                $sec  = substr($strVal,17,2);
+                //echo $year.$mon.$day.$hour.$min.$sec;
                 //return date("l F dS, Y h:i A",mktime($hour,$min,$sec,$mon,$day,$year));	            
                 return mktime($hour,$min,$sec,$mon,$day,$year);	            
 	        } else
 	            return null;
-	    else 
+	    } else 
 	        return $strVal;
 	} else {
 		return null;
