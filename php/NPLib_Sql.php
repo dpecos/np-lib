@@ -155,9 +155,12 @@ function NP_insertObject($object, $ddbb_table, $ddbb_mapping, $ddbb_types) {
 
 function encodeSQLValue($strVal, $sqlType) {
 	if (isset($strVal) && $strVal !== null) {
-		if ($sqlType == "STRING") 
-			return "'".$strVal."'";
-		else if ($sqlType == "BOOL") {
+		if ($sqlType == "STRING") {
+		   if (strlen(trim($strVal)) == 0)
+		      return "NULL";
+		   else
+   			return "'".$strVal."'";
+		} else if ($sqlType == "BOOL") {
 			if (isset($strVal) && $strVal != "") {
 			    if (strtolower($strVal) == "true")
 			        return 1;
