@@ -9,25 +9,39 @@ class NP_DDBB {
    private $dbTypes;
    private $dbTables;
    
-   public function __construct ($dbconfig) {
-	   $this->config = $dbconfig;
+   public function __construct ($dbconfig = null, $dbMappings = null, $dbTypes = null, $dbTables = null, $dbSQL = null) {
+	   $this->setDDBBConfig($dbconfig);
 	   
-	   $this->dbMappings = array();
-      $this->dbTypes = array();
-      $this->dbTables = array();
+	   if ($dbMappings == null) {
+	      $this->dbMappings = array();
+         $this->dbTypes = array();
+         $this->dbTables = array();
+         $this->dbSQL = array();
+      } else {
+         $this->dbMappings = $dbMappings;
+         $this->dbTypes = $dbTypes;
+         $this->dbTables = $dbTables;
+         $this->dbSQL = $dbSQL;
+      }
    }
    
-   public function addConfig($objType, $sqlTable, $sqlMappings, $sqlTypes) {
+   public function setDDBBConfig($dbconfig) {
+      $this->config = $dbconfig;
+   }
+   
+   public function isInitialized() {
+      return $this->config != null;
+   }
+   
+   public function addConfig($objType, $sqlTable, $sqlMappings, $sqlTypes, $sqlInfo = null) {
       $this->dbMappings[$objType] = $sqlMappings;
       $this->dbTypes[$objType] = $sqlTypes;
-      if (isset($this->config["PREFIX"]))
-         $this->dbTables[$objType] = $this->config["PREFIX"].$sqlTable;
-      else
-         $this->dbTables[$objType] = $sqlTable;
+      $this->dbTables[$objType] = $sqlTable;
+      $this->dbSQL[$objType] = $sqlInfo;
    }
    
    public function getTable($objType) { 
-      return $this->dbTables[$objType];
+      return $this->config["PREFIX"].$this->dbTables[$objType];
    }
     
    public function getMapping($objType, $fieldName) { 
@@ -134,7 +148,7 @@ class NP_DDBB {
 	   }
    }  
    
-   public function insertObject($object) {    
+   public function insertObject($object, $returnSQL = false) {    
    
       $object_name = get_class($object);
       
@@ -158,7 +172,7 @@ class NP_DDBB {
 									   $varValues .= ", ";
 								   } else
 									   $first = false;
-								   $varNames .= $ddbb_mapping[$object_name][$var][$objvar][$subobjvar];
+								   $varNames .= "`".$ddbb_mapping[$object_name][$var][$objvar][$subobjvar]."`";
 								   $varValues .= NP_DDBB::encodeSQLValue($subobjvalue, $ddbb_types[$object_name][$var][$objvar][$subobjvar]);
 							   }
 						   } else {
@@ -167,7 +181,7 @@ class NP_DDBB {
 								   $varValues .= ", ";
 							   } else
 								   $first = false;
-							   $varNames .= $ddbb_mapping[$object_name][$var][$objvar];
+							   $varNames .= "`".$ddbb_mapping[$object_name][$var][$objvar]."`";
 							   $varValues .= NP_DDBB::encodeSQLValue($objvalue, $ddbb_types[$object_name][$var][$objvar]);
 						   }
 					   }
@@ -179,7 +193,7 @@ class NP_DDBB {
 						   $varValues .= ", ";
 					   } else
 						   $first = false;
-					   $varNames .= $ddbb_mapping[$object_name][$var];
+					   $varNames .= "`".$ddbb_mapping[$object_name][$var]."`";
 					   $varValues .= NP_DDBB::encodeSQLValue($value, $ddbb_types[$object_name][$var]);
 				   }
 			   }
@@ -187,9 +201,12 @@ class NP_DDBB {
 			   //TODO: ERROR
 		   }
 	   }
-	   $sql = "INSERT INTO ".$ddbb_table[$object_name]." ($varNames) VALUES ($varValues)";	
+	   $sql = "INSERT INTO ".$this->getTable($object_name)." ($varNames) VALUES ($varValues)";	
 	
-	   return $this->executeInsertUpdateQuery($sql);
+	   if ($returnSQL) 
+	      return $sql;
+	   else
+   	   return $this->executeInsertUpdateQuery($sql);
    }
 
    public static function encodeSQLValue($strVal, $sqlType) {
@@ -263,12 +280,12 @@ class NP_DDBB {
    }
 
    private function connectServer () {
-
-	   $this->dbCon = mysql_connect ($this->config ["HOST"], $this->config ["USER"], $this->config ["PASSWD"])
-		   or die ("No se pudo conectar con la BBDD: ".mysql_error());
-	   mysql_select_db ($this->config ["NAME"])
-		   or die ("No se encontró la BBDD en el servidor.");
-
+      if ($this->config != null) {
+	      $this->dbCon = mysql_connect ($this->config ["HOST"], $this->config ["USER"], $this->config ["PASSWD"])
+		      or die ("No se pudo conectar con la BBDD: ".mysql_error());
+	      mysql_select_db ($this->config ["NAME"])
+		      or die ("No se encontro la BBDD en el servidor.");
+      }
    }
 
    private function disconnectServer () {
@@ -348,6 +365,58 @@ class NP_DDBB {
 	   return $resultado;
    }    
    
+   public function createSQLTableData($type) {
+      $inserts = array();
+      $handler = create_function('$data, $type, $inserts, $ddbb', '$obj = new $type(); $ddbb->loadData($obj, $data); $inserts = array_merge($inserts, array($ddbb->insertObject($obj, true)));');
+      $this->executeSelectQuery("SELECT * FROM ".$this->getTable($type), $handler, array($type, &$inserts, $this));
+      return implode(";\n", $inserts);
+   }
+   
+   public function createSQLCreateTable($data = false, $type = null) {
+      if (isset($type)) {
+         if ($this->dbSQL[$type] != null) {
+            $sql = "CREATE TABLE IF NOT EXISTS `".$this->getTable($type)."` ("."\n";
+            $pk = array();
+            foreach ($this->dbMappings[$type] as $key => $fName) {
+               $fType = $this->dbTypes[$type][$key];
+               if (isset($this->dbSQL[$type][$key]["PK"]) && $this->dbSQL[$type][$key]["PK"]===true)
+                  $pk = array_merge($pk, array("`".$fName."`"));
+               switch ($fType) {
+                  case "INT": $fType = "int"; break;
+                  case "FLOAT": $fType = "float"; break;
+                  case "STRING": $fType = "varchar"; break;
+                  case "BOOL": $fType = "boolean"; break;             
+                  case "DATE": $fType = "timestamp"; break;
+               }
+               $sql .= "  `".$fName."` ".$fType;
+               $sql .= array_key_exists("LENGTH", $this->dbSQL[$type][$key]) ? "(".$this->dbSQL[$type][$key]["LENGTH"].") " : " ";
+               $sql .= array_key_exists("NULLABLE", $this->dbSQL[$type][$key]) ? $this->dbSQL[$type][$key]["NULLABLE"]===true ? "" : "NOT NULL " : "";
+               $sql .= (array_key_exists("AUTO_INCREMENT", $this->dbSQL[$type][$key]) && $this->dbSQL[$type][$key]["AUTO_INCREMENT"]==true) ? "auto_increment " : "";
+               $sql .= array_key_exists("DEFAULT", $this->dbSQL[$type][$key]) ? $this->dbSQL[$type][$key]["DEFAULT"] === null ? "default NULL " : ($this->dbSQL[$type][$key]["DEFAULT"] === "CURRENT_TIMESTAMP" ? "default CURRENT_TIMESTAMP " : "default '".$this->dbSQL[$type][$key]["DEFAULT"]."' ") : "";
+               $sql .= ",\n"; 
+            }
+            $sql .= "  PRIMARY KEY(".implode(",",$pk).")\n";
+            $sql .= ") ENGINE=MyISAM DEFAULT CHARSET=latin1;\n";
+            if ($data) {
+               $sql .= "\n-- Data for '".$this->getTable($type)."' --\n";
+               $sql .= $this->createSQLTableData($type).";";
+            }
+            return $sql;
+         } else {
+            return "-- NP_SQL: No SQL data for type '$type'";
+         }
+      } else {
+         $sql = "";
+         foreach (array_keys($this->dbSQL) as $type) {
+            $tmp = $this->createSQLCreateTable($data, $type);
+            if ($tmp != null) {
+               $sql .= $tmp;
+               $sql .= "\n\n-- -----------------\n\n";
+            }
+         }
+         return $sql;
+      }
+   }
 }
 
 ?>
