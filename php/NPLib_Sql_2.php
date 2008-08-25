@@ -301,8 +301,8 @@ class NP_DDBB {
 	   $resultado = mysql_query($sql);
 
 	   if (!$resultado) {
-		   echo "No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error();
-		   exit;
+		   throw new Exception("No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error());
+		   //exit;
 	   }
 
 	   $datos = mysql_fetch_assoc ($resultado);
@@ -322,8 +322,8 @@ class NP_DDBB {
 	   $resultado = mysql_query($sql);
 
 	   if (!$resultado) {
-		   echo "No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error();
-		   exit;
+		   throw new Exception("No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error());
+		   //exit;
 	   }
 
       $data = null;
@@ -357,8 +357,8 @@ class NP_DDBB {
 	   $resultado = mysql_query($sql);
 	
 	   if (!$resultado) {
-		   echo "No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error();
-		   exit;
+		   throw new Exception("No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error());
+		   //exit;
 	   }
 	
 	   $id = mysql_insert_id();
