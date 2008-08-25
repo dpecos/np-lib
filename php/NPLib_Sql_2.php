@@ -313,7 +313,7 @@ class NP_DDBB {
 	   return $datos;
    }
 
-   public function executeSelectQuery($sql, $f, $params = null) {
+   public function executeSelectQuery($sql, $f = null, $params = null) {
 	   if ($params == null)
 		   $params = array();
 
@@ -326,16 +326,29 @@ class NP_DDBB {
 		   exit;
 	   }
 
-	   while ($datos = mysql_fetch_assoc ($resultado)) {
-		   $func = new ReflectionFunction($f);
-		   $p = array_merge(array($datos), $params);
-		   $func->invokeArgs($p);
-		   //$f($datos, $params);
+      $data = null;
+      if (isset($f) && $f != null && function_exists($f)) {
+   	   while ($datos = mysql_fetch_assoc ($resultado)) {
+   		   $func = new ReflectionFunction($f);
+   		   $p = array_merge(array($datos), $params);
+   		   $func->invokeArgs($p);
+   		   //$f($datos, $params);
+   	   }
+	   } else {
+	      $data = array();
+	      while ($datos = mysql_fetch_assoc ($resultado)) {
+	         $data = array_merge($data, array($datos));
+	      }
 	   }
 
 	   mysql_free_result($resultado);
 		
 	   $this->disconnectServer();
+	   
+	   if ($data != null)
+	      return $data;
+	   else
+	      return null;
    }
 
    public function executeInsertUpdateQuery($sql) {
