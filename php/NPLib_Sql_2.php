@@ -289,8 +289,10 @@ class NP_DDBB {
    }
 
    private function disconnectServer () {
-	   mysql_close($this->dbCon);
-	   $this->dbCon = null;
+      if ($this->dbCon != null) {
+   	   mysql_close($this->dbCon);
+   	   $this->dbCon = null;
+	   }
    }
 
    public function executePKSelectQuery($sql) {
