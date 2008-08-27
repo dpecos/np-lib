@@ -60,4 +60,27 @@ function get_referer() {
 	}
 	return $referer;
 }
+
+function NP_url_decode($obj) {
+        if (gettype($obj) == "array") {
+                foreach ($obj as $k => $v) {
+                        $obj[$k] = NP_url_decode($v);
+                }
+        } else if (gettype($obj) == "object") {
+                foreach (get_object_vars($obj) as $k => $v) {
+                        $obj->$k = NP_url_decode($v);
+                }
+        }
+        if (gettype($obj) == "string") {
+                return urldecode($obj);
+        } else {
+                return $obj;
+        }
+}
+
+function NP_json_encode($obj) {
+	if (gettype($obj) == "object")
+		$obj = clone $obj;
+	return json_encode(NP_UTF8_encode($obj));
+}
 ?>
