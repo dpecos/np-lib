@@ -379,14 +379,7 @@ class NP_DDBB {
 	
 	   return $resultado;
    }    
-   
-   public function createSQLTableData($type) {
-      $inserts = array();
-      $handler = create_function('$data, $type, $inserts, $ddbb', '$obj = new $type(); $ddbb->loadData($obj, $data); $inserts = array_merge($inserts, array($ddbb->insertObject($obj, true)));');
-      $this->executeSelectQuery("SELECT * FROM ".$this->getTable($type), $handler, array($type, &$inserts, $this));
-      return implode(";\n", $inserts);
-   }
-   
+  
    public function createSQLCreateTable($data = false, $type = null) {
       if (isset($type)) {
          if ($this->dbSQL[$type] != null) {
@@ -413,8 +406,7 @@ class NP_DDBB {
             $sql .= "  PRIMARY KEY(".implode(",",$pk).")\n";
             $sql .= ") ENGINE=MyISAM DEFAULT CHARSET=latin1;\n";
             if ($data) {
-               $sql .= "\n-- Data for '".$this->getTable($type)."' --\n";
-               $sql .= $this->createSQLTableData($type).";";
+               $sql .= $this->createSQLDataTable($type);
             }
             return $sql;
          } else {
@@ -426,11 +418,38 @@ class NP_DDBB {
             $tmp = $this->createSQLCreateTable($data, $type);
             if ($tmp != null) {
                $sql .= $tmp;
-               $sql .= "\n\n-- -----------------\n\n";
+               if (!$data)
+                  $sql .= "\n\n-- -----------------\n\n";
             }
          }
          return $sql;
       }
+   }
+   
+   public function createSQLDataTable($type = null) {
+      $sql = "";
+      if (isset($type)) {
+         if ($this->dbSQL[$type] != null) {     
+            $sql .= "\n-- Data for '".$this->getTable($type)."' --\n";
+            try {
+               $inserts = array();
+               $handler = create_function('$data, $type, $inserts, $ddbb', '$obj = new $type(); $ddbb->loadData($obj, $data); $inserts = array_merge($inserts, array($ddbb->insertObject($obj, true)));');
+               $this->executeSelectQuery("SELECT * FROM ".$this->getTable($type), $handler, array($type, &$inserts, $this));
+               if (count($inserts) > 0)
+                  $sql .= implode(";\n", $inserts).";";
+            } catch (Exception $e) {
+               $sql .= "-- ERROR obtaining data: ".$e->getMessage()."\n";
+            }
+            $sql .= "\n\n-- -----------------\n\n";
+         } else {
+            $sql .= "-- NP_SQL: No SQL data for type '$type'\n";
+         }
+      } else {
+         foreach (array_keys($this->dbSQL) as $type) {
+            $sql .= $this->createSQLDataTable($type);
+         }  
+      }
+      return $sql;
    }
 }
 
