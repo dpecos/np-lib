@@ -25,7 +25,7 @@ function NP_loadDataInto(&$obj, &$data, $prefix="") {
 	$objectVars = array_keys(get_object_vars($obj));
   
   foreach ($data as $key => $value) {
-		if (beginsWith($key, $prefix)) {
+		if (NP_startsWith($prefix, $key)) {
 			$path = split("_", $key);
 			$property = $path[1];
 			if (in_array($property, $objectVars)) {

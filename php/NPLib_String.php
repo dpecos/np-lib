@@ -1,9 +1,9 @@
 <?php
-function beginsWith( $str, $sub ) {
-   return ( substr( $str, 0, strlen( $sub ) ) === $sub );
+function NP_startsWith($sub, $str) {
+   return (substr($str, 0, strlen($sub)) === $sub);
 }
-function endsWith( $str, $sub ) {
-   return ( substr( $str, strlen( $str ) - strlen( $sub ) ) === $sub );
+function NP_endsWith($sub, $str) {
+   return (substr($str, strlen($str) - strlen($sub)) === $sub);
 }
 
 function NP_UTF8_encode($obj) {
