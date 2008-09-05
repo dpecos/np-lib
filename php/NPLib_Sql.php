@@ -1,4 +1,5 @@
 <?php
+require_once("NPLib_Common.php");
 
 $npsql_dbconfig = null;
 

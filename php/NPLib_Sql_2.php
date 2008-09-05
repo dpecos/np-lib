@@ -1,4 +1,5 @@
 <?
+require_once("NPLib_Common.php");
 
 class NP_DDBB {
    

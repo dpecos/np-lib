@@ -1,4 +1,5 @@
 <?php
+require_once("NPLib_Common.php");
 require_once("mail/htmlMimeMail.php");
 
 function redirect($page) {
@@ -81,6 +82,13 @@ function NP_url_decode($obj) {
 function NP_json_encode($obj) {
 	if (gettype($obj) == "object")
 		$obj = clone $obj;
-	return json_encode(NP_UTF8_encode($obj));
+		
+   if (function_exists("json_encode")) {
+	   return json_encode(NP_UTF8_encode($obj));
+	} else {
+	   require_once 'Zend/Json.php';
+	   return Zend_Json::encode(NP_UTF8_encode($obj));
+	}
 }
+
 ?>

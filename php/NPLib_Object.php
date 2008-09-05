@@ -1,4 +1,6 @@
 <?php
+require_once("NPLib_Common.php");
+
 function _obtainKeyForValue($hash, $value) {
    if ($hash != null) {
 	   foreach ($hash as $key1 => $val1) {

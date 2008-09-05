@@ -1,4 +1,6 @@
 <?php
+require_once("NPLib_Common.php");
+
 function NP_startsWith($sub, $str) {
    return (substr($str, 0, strlen($sub)) === $sub);
 }
