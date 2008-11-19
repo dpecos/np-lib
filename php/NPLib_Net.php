@@ -3,18 +3,18 @@ require_once("NPLib_Common.php");
 require_once("mail/htmlMimeMail.php");
 
 function redirect($page) {
-   if (isset($_ENV['HTTP_HOST'])) {
-    $host  = $_ENV['HTTP_HOST'];
-    if (NP_endsWith(".php", $_ENV["SCRIPT_URL"]))
-        $uri  = rtrim(dirname($_ENV["SCRIPT_URL"]), '/\\');
-    else
-        $uri  = rtrim($_ENV["SCRIPT_URL"], '/\\');
+   if (isset($_ENV['HTTP_HOST']) && isset($_ENV["SCRIPT_URL"])) {
+      $host  = $_ENV['HTTP_HOST'];
+      if (NP_endsWith(".php", $_ENV["SCRIPT_URL"]))
+         $uri  = rtrim(dirname($_ENV["SCRIPT_URL"]), '/\\');
+      else
+         $uri  = rtrim($_ENV["SCRIPT_URL"], '/\\');
    } else {
-     $host  = $_SERVER['HTTP_HOST'];
-     if (NP_endsWith(".php", $_SERVER["SCRIPT_NAME"]))
-        $uri  = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-    else
-        $uri  = rtrim($_SERVER['PHP_SELF'], '/\\');
+      $host  = $_SERVER['HTTP_HOST'];
+      if (NP_endsWith(".php", $_SERVER["SCRIPT_NAME"]))
+         $uri  = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+      else
+         $uri  = rtrim($_SERVER['PHP_SELF'], '/\\');
    }
 	header("Location: http://$host$uri/$page");
 	exit;

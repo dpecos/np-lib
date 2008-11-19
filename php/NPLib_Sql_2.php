@@ -41,6 +41,20 @@ class NP_DDBB {
       $this->dbSQL[$objType] = $sqlInfo;
    }
    
+   public function addTable($objType, $sqlTable) {
+      $this->addConfig($objType, $sqlTable, array(), array(), array());
+   }
+   
+   public function addField($objType, $fieldName, $sqlFieldName, $sqlType, $sqlInfo) {
+      if (array_key_exists($objType, $this->dbMappings)) {
+         $this->dbMappings[$objType][$fieldName] = $sqlFieldName != null ? $sqlFieldName : $fieldName;
+         $this->dbTypes[$objType][$fieldName] = $sqlType;
+         $this->dbSQL[$objType][$fieldName] = $sqlInfo;
+      } else {
+         throw new Exception("Unknown type ".$objType);
+      }
+   }
+   
    public function getTable($objType) { 
       return $this->config["PREFIX"].$this->dbTables[$objType];
    }
@@ -212,7 +226,7 @@ class NP_DDBB {
 
    public static function encodeSQLValue($strVal, $sqlType) {
 	   if (isset($strVal) && $strVal !== null) {
-		   if ($sqlType == "STRING") {
+		   if ($sqlType == "STRING" || $sqlType == "TEXT") {
 		      if (strlen(trim($strVal)) == 0)
 		         return "NULL";
 		      else
@@ -243,7 +257,7 @@ class NP_DDBB {
 
    public static function decodeSQLValue($strVal, $sqlType) {
 	   if (isset($strVal) && $strVal !== null) {
-		   if ($sqlType == "STRING") 
+		   if ($sqlType == "STRING" || $sqlType == "TEXT") 
 			   return $strVal;
 		   else if ($sqlType == "BOOL") 
 			   if (isset($strVal) && $strVal != "")
@@ -394,12 +408,13 @@ class NP_DDBB {
                   case "INT": $fType = "int"; break;
                   case "FLOAT": $fType = "float"; break;
                   case "STRING": $fType = "varchar"; break;
+                  case "TEXT": $fType = "text"; break;
                   case "BOOL": $fType = "boolean"; break;             
                   case "DATE": $fType = "timestamp"; break;
                }
                $sql .= "  `".$fName."` ".$fType;
                $sql .= array_key_exists("LENGTH", $this->dbSQL[$type][$key]) ? "(".$this->dbSQL[$type][$key]["LENGTH"].") " : " ";
-               $sql .= array_key_exists("NULLABLE", $this->dbSQL[$type][$key]) ? $this->dbSQL[$type][$key]["NULLABLE"]===true ? "" : "NOT NULL " : "";
+               $sql .= array_key_exists("NULLABLE", $this->dbSQL[$type][$key]) ? $this->dbSQL[$type][$key]["NULLABLE"]===true ? "NULL " : "NOT NULL " : "";
                $sql .= (array_key_exists("AUTO_INCREMENT", $this->dbSQL[$type][$key]) && $this->dbSQL[$type][$key]["AUTO_INCREMENT"]==true) ? "auto_increment " : "";
                $sql .= array_key_exists("DEFAULT", $this->dbSQL[$type][$key]) ? $this->dbSQL[$type][$key]["DEFAULT"] === null ? "default NULL " : ($this->dbSQL[$type][$key]["DEFAULT"] === "CURRENT_TIMESTAMP" ? "default CURRENT_TIMESTAMP " : "default '".$this->dbSQL[$type][$key]["DEFAULT"]."' ") : "";
                $sql .= ",\n"; 
