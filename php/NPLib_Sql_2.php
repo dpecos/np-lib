@@ -3,14 +3,15 @@ require_once("NPLib_Common.php");
 
 class NP_DDBB {
    
-   private $config;
-   private $dbCon;
+   var $config;
+   var $dbCon;
    
-   private $dbMappings;
-   private $dbTypes;
-   private $dbTables;
+   var $dbMappings;
+   var $dbTypes;
+   var $dbTables;
+   var $dbSQL;
    
-   public function __construct ($dbconfig = null, $dbMappings = null, $dbTypes = null, $dbTables = null, $dbSQL = null) {
+   function __construct ($dbconfig = null, $dbMappings = null, $dbTypes = null, $dbTables = null, $dbSQL = null) {
 	   $this->setDDBBConfig($dbconfig);
 	   
 	   if ($dbMappings == null) {
@@ -26,55 +27,71 @@ class NP_DDBB {
       }
    }
    
-   public function setDDBBConfig($dbconfig) {
+   function setDDBBConfig($dbconfig) {
       $this->config = $dbconfig;
    }
    
-   public function isInitialized() {
+   function isInitialized() {
       return $this->config != null;
    }
    
-   public function addConfig($objType, $sqlTable, $sqlMappings, $sqlTypes, $sqlInfo = null) {
+   function addConfig($objType, $sqlTable, $sqlMappings, $sqlTypes, $sqlInfo = null) {
       $this->dbMappings[$objType] = $sqlMappings;
       $this->dbTypes[$objType] = $sqlTypes;
       $this->dbTables[$objType] = $sqlTable;
-      $this->dbSQL[$objType] = $sqlInfo;
+      $this->dbSQL[$objType] = $sqlInfo === null ? array() : $sqlInfo;
    }
    
-   public function addTable($objType, $sqlTable) {
+   function addTable($objType, $sqlTable) {
       $this->addConfig($objType, $sqlTable, array(), array(), array());
    }
    
-   public function addField($objType, $fieldName, $sqlFieldName, $sqlType, $sqlInfo) {
+   function addField($objType, $fieldName, $sqlFieldName, $sqlType, $sqlInfo) {
       if (array_key_exists($objType, $this->dbMappings)) {
          $this->dbMappings[$objType][$fieldName] = $sqlFieldName != null ? $sqlFieldName : $fieldName;
          $this->dbTypes[$objType][$fieldName] = $sqlType;
          $this->dbSQL[$objType][$fieldName] = $sqlInfo;
       } else {
-         throw new Exception("Unknown type ".$objType);
+         die("Unknown type ".$objType);
       }
    }
    
-   public function getTable($objType) { 
+   function getTable($objType) { 
       return $this->config["PREFIX"].$this->dbTables[$objType];
    }
     
-   public function getMapping($objType, $fieldName) { 
-      return $this->dbMappings[$objType][$fieldName];
+   function getMapping($objType, $fieldName) { 
+      if ($fieldName == null)
+         return $this->dbMappings[$objType];
+      else
+         return $this->dbMappings[$objType][$fieldName];
    }
       
-   public function getType($objType, $fieldName) { 
-      return $this->dbTypes[$objType][$fieldName];
+   function getType($objType, $fieldName) { 
+      if ($fieldName == null)
+         return $this->dbTypes[$objType];
+      else
+        return $this->dbTypes[$objType][$fieldName];
    }
      
-   private function __createSELECT_Column($colName, $sqlType) {
+   function buildSELECT($obj, $whereCondition) {
+      $isFirst = true;
+      $objName = get_class($obj);
+      $sql = "SELECT ";
+      $sql .= $this->__createSELECT_AllColumns($obj, null, $this->getMapping($objName, null), $this->getType($objName, null), $isFirst);
+      $sql .= " FROM ".$this->getTable($objName)." WHERE ".$whereCondition;
+    
+      return $sql;
+   }
+   
+   function __createSELECT_Column($colName, $sqlType) {
       if ($sqlType == "DATE") {
         return "DATE_FORMAT(".$colName.", '%Y%m%d%H%i%s') AS ".$colName;
       } else
         return $colName;
    }    
    
-   private function __createSELECT_AllColumns($obj, $field, $ddbb_mapping, $ddbb_types, &$first) {
+   function __createSELECT_AllColumns($obj, $field, $ddbb_mapping, $ddbb_types, &$first) {
       $sql = "";
 
       if ($obj != null) {      
@@ -112,7 +129,7 @@ class NP_DDBB {
       return $sql;
    }
 
-   public function loadData(&$obj, &$data, $ddbbMapping = null, $ddbbTypes = null) {
+   function loadData(&$obj, &$data, $ddbbMapping = null, $ddbbTypes = null) {
    
       $object_name = get_class($obj);
       if ($ddbbMapping != null && $ddbbTypes != null) {
@@ -122,21 +139,20 @@ class NP_DDBB {
          $ddbb_mapping = $this->dbMappings[$object_name];
          $ddbb_types = $this->dbTypes[$object_name];
       }
-      
-	   foreach (array_values($ddbb_mapping) as $dbFieldName) {
+
+	  foreach ($ddbb_mapping as $objectFieldName => $dbFieldName) {
 	
-		   $objectFieldName = _obtainKeyForValue($ddbb_mapping, $dbFieldName);
+		   /*$objectFieldName = _obtainKeyForValue($ddbb_mapping, $dbFieldName);
 
 		   if ($objectFieldName == null) {
-		       return;
-		   }
+		       continue;
+		   }*/
 		
-		   if (is_array($objectFieldName)) {
-		       
+		   if (is_array($dbFieldName)) {
 		       if (is_object($obj)) {
-		           $this->loadData($obj->$objectFieldName[0], $data, $ddbb_mapping[$objectFieldName[0]], $ddbb_types[$objectFieldName[0]]);
+		           $this->loadData($obj->$objectFieldName, $data, $ddbb_mapping[$objectFieldName], $ddbb_types[$objectFieldName]);
 		       } else {
-		           $this->loadData($obj[$objectFieldName[0]], $data, $ddbb_mapping[$objectFieldName[0]], $ddbb_types[$objectFieldName[0]]);
+		           $this->loadData($obj[$objectFieldName], $data, $ddbb_mapping[$objectFieldName], $ddbb_types[$objectFieldName]);
 		       }
 		       
 		   } else {
@@ -148,7 +164,7 @@ class NP_DDBB {
              			$obj->$objectFieldName = NP_DDBB::decodeSQLValue(null, $ddbb_types[$objectFieldName]);	
           			}
 			      } else if (is_array($obj)) {
-                  if (in_array($dbFieldName, array_keys($data))) {
+                    if (in_array($dbFieldName, array_keys($data))) {
           			   $obj[$objectFieldName] = NP_DDBB::decodeSQLValue($data[$dbFieldName], $ddbb_types[$objectFieldName]);	
           			} else {
           				$obj[$objectFieldName] = NP_DDBB::decodeSQLValue(null, $ddbb_types[$objectFieldName]);	
@@ -163,32 +179,112 @@ class NP_DDBB {
 	   }
    }  
    
-   public function insertObject($object, $returnSQL = false) {    
    
-      $object_name = get_class($object);
-      
-      $ddbb_mapping = $this->dbMappings;
-      $ddbb_types = $this->dbTypes;
-      $ddbb_table = $this->dbTables;
+   function __createInsertValuesList($ddbb_mapping, $ddbb_types, $object, $var, $value) {
+       $varNames = array();
+       $varValues = array();
+       $pkNames = array();
+       
+       $object_name = get_class($object);
+       
+       if ($ddbb_mapping === null) {    
+           
+           $ddbb_mapping = $this->getMapping($object_name, null);
+           $ddbb_types = $this->getType($object_name, null);
+    	
+    	   foreach (get_object_vars($object) as $var => $value) {
+    		   if (array_key_exists($var, $ddbb_mapping)) {
+    		       $data = $this->__createInsertValuesList($ddbb_mapping, $ddbb_types, $object, $var, $value);
+    		       $varNames = array_merge_recursive($varNames, $data[0]);
+    		       $varValues = array_merge_recursive($varValues, $data[1]);
+    		       $pkNames = array_merge_recursive($pkNames, $data[2]);
+    		   }
+    	   }
+	   } else {
+           if (is_array($ddbb_mapping[$var])) {
+            
+               $iter = is_object($value) ? get_object_vars($value) : $value;
+    
+               foreach ($iter as $objvar => $objvalue) {
+    		      if (array_key_exists($objvar, $ddbb_mapping[$var])) {
+        	        $data = $this->__createInsertValuesList($ddbb_mapping[$var], $ddbb_types[$var], $value, $objvar, $objvalue);
+    	            $varNames = array_merge_recursive($varNames, $data[0]);
+    	            $varValues = array_merge_recursive($varValues, $data[1]);
+    	            $pkNames = array_merge_recursive($pkNames, $data[2]);
+    	          }
+    	       } 
+           } else {
+        	   if ($value !== null) {
+        		   $varNames[] = $ddbb_mapping[$var];
+        		   $varValues[] = NP_DDBB::encodeSQLValue($value, $ddbb_types[$var]);
+        		   if (strlen($object_name) > 0 &&
+        		       array_key_exists($object_name, $this->dbSQL) && 
+        		       array_key_exists($var, $this->dbSQL[$object_name]) && 
+        		       array_key_exists("PK", $this->dbSQL[$object_name][$var]) && 
+        		       $this->dbSQL[$object_name][$var]["PK"])
+        		      $pkNames[$var] = $ddbb_mapping[$var];
+        	   }
+           }
+       }
+       return array($varNames, $varValues, $pkNames);
+   }
+   
+   function insertObject($object, $returnSQL = false) {    
+       $varNames = null;
+       $varValues = null;
+       
+       $data = $this->__createInsertValuesList(null, null, $object, null, null);
+       $varNames = $data[0];
+       $varValues = $data[1];
+       
+		       
+	   $object_name = get_class($object);
+	   $sql = "INSERT INTO ".$this->getTable($object_name)." (";
+	   for ($i=0; $i < count($varNames); $i++) {
+	      if ($i !== 0) {
+	          $sql .= ",";
+	      } 
+	      $sql .= "`".$varNames[$i]."`";
+	   }
+	   $sql .= ") VALUES (";
+	   for ($i=0; $i < count($varValues); $i++) {
+	      if ($i !== 0) {
+	          $sql .= ", ";
+	      } 
+	      $sql .= $varValues[$i];
+	   }
+	   $sql .= ")";	
+	  
+	   if ($returnSQL) 
+	      return $sql;
+	   else
+   	      return $this->executeInsertUpdateQuery($sql);
+   }   
+/*   function insertObject($object, $returnSQL = false) {    
+   
+       $object_name = get_class($object);
+       
+       $ddbb_mapping = $this->getMapping($object_name, null);
+       $ddbb_types = $this->getType($object_name, null);
    	
 	   $varNames = "";
 	   $varValues = "";
 	   $first = true;	
 	
 	   foreach (get_object_vars($object) as $var => $value) {
-		   if (array_key_exists($var, $ddbb_mapping[$object_name])) {
-			   if (is_array($ddbb_mapping[$object_name][$var])) {
-				   foreach (get_object_vars($this->$var) as $objvar => $objvalue) {
-					   if (array_key_exists($objvar, $ddbb_mapping[$object_name][$var])) {
-						   if (is_array($ddbb_mapping[$object_name][$var][$objvar])) {
-							   foreach ($this->$var->$objvar as $subobjvar => $subobjvalue) {
+		   if (array_key_exists($var, $ddbb_mapping)) {
+			   if (is_array($ddbb_mapping[$var])) {
+				   foreach (get_object_vars($value) as $objvar => $objvalue) {
+					   if (array_key_exists($objvar, $ddbb_mapping[$var])) {
+						   if (is_array($ddbb_mapping[$var][$objvar])) {
+							   foreach ($object->$var->$objvar as $subobjvar => $subobjvalue) {
 								   if (!$first) {
 									   $varNames .= ", ";
 									   $varValues .= ", ";
 								   } else
 									   $first = false;
-								   $varNames .= "`".$ddbb_mapping[$object_name][$var][$objvar][$subobjvar]."`";
-								   $varValues .= NP_DDBB::encodeSQLValue($subobjvalue, $ddbb_types[$object_name][$var][$objvar][$subobjvar]);
+								   $varNames .= "`".$ddbb_mapping[$var][$objvar][$subobjvar]."`";
+								   $varValues .= NP_DDBB::encodeSQLValue($subobjvalue, $ddbb_types[$var][$objvar][$subobjvar]);
 							   }
 						   } else {
 							   if (!$first) {
@@ -196,8 +292,8 @@ class NP_DDBB {
 								   $varValues .= ", ";
 							   } else
 								   $first = false;
-							   $varNames .= "`".$ddbb_mapping[$object_name][$var][$objvar]."`";
-							   $varValues .= NP_DDBB::encodeSQLValue($objvalue, $ddbb_types[$object_name][$var][$objvar]);
+							   $varNames .= "`".$ddbb_mapping[$var][$objvar]."`";
+							   $varValues .= NP_DDBB::encodeSQLValue($objvalue, $ddbb_types[$var][$objvar]);
 						   }
 					   }
 				   }
@@ -208,8 +304,8 @@ class NP_DDBB {
 						   $varValues .= ", ";
 					   } else
 						   $first = false;
-					   $varNames .= "`".$ddbb_mapping[$object_name][$var]."`";
-					   $varValues .= NP_DDBB::encodeSQLValue($value, $ddbb_types[$object_name][$var]);
+					   $varNames .= "`".$ddbb_mapping[$var]."`";
+					   $varValues .= NP_DDBB::encodeSQLValue($value, $ddbb_types[$var]);
 				   }
 			   }
 		   } else {
@@ -217,20 +313,119 @@ class NP_DDBB {
 		   }
 	   }
 	   $sql = "INSERT INTO ".$this->getTable($object_name)." ($varNames) VALUES ($varValues)";	
-	
+
 	   if ($returnSQL) 
 	      return $sql;
 	   else
-   	   return $this->executeInsertUpdateQuery($sql);
+   	      return $this->executeInsertUpdateQuery($sql);
+   }*/
+
+   function updateObject($object, $returnSQL = false) {    
+       global $ddbb;
+       $varNames = null;
+       $varValues = null;
+       
+       $data = $this->__createInsertValuesList(null, null, $object, null, null);
+       $varNames = $data[0];
+       $varValues = $data[1];
+       $pkNames = $data[2];
+         
+       $fields = array_combine($varNames, $varValues);
+		       
+	   $object_name = get_class($object);
+	   $sql = "UPDATE ".$this->getTable($object_name)." SET ";
+	   $first = true;
+	   $sqlWhere = "";
+	   $firstWhere = true;
+	   
+	   foreach ($fields as $name => $value) {
+          $pkFieldName = array_search ($name, $pkNames);
+	      if (strlen($pkFieldName) > 0) {
+	        if (!$firstWhere) {
+                $sqlWhere .= " AND ";
+            } 
+            $firstWhere = false;
+            $sqlWhere .= "`".$name."`=".$value;
+	      } else {
+            if (!$first) {
+                $sql .= ", ";
+            } 
+            $first = false;
+            $sql .= "`".$name."`=".$value;
+	      }
+	   }
+	   $sql .= " WHERE ".$sqlWhere;
+
+	   if ($returnSQL) 
+	      return $sql;
+	   else
+   	      return $this->executeInsertUpdateQuery($sql);
    }
 
-   public static function encodeSQLValue($strVal, $sqlType) {
+   function decodeI18NSqlValue($str) {
+        $matches = array();
+        if ((defined("NP_LANG") || defined("NP_DEFAULT_LANG")) && 
+          preg_match_all('/#(.?.?_.?.?)@([^#]*)#/', $str, $matches)) {
+            $langs = $matches[1];
+            $strings = $matches[2];
+            
+            $translations = array(); 
+            
+            foreach ($langs as $idx => $lang) {
+                $translations[$lang] = $strings[$idx];
+            }
+            
+            return $translations;
+          
+        	/*$i_lang = array_search(NP_LANG, $langs);
+        	$i_default_lang = array_search(NP_DEFAULT_LANG, $langs);
+        	
+        	if ($i_lang !== FALSE)
+        	    return $strings[$i_lang];
+        	else if ($i_default_lang !== FALSE)
+        	    return $strings[$i_default_lang];
+        	else 
+        	    return $str;*/
+        	
+        } else 
+            return $str;
+   }
+    
+   function encodeI18NSqlValue($strings) {
+        if (is_array($strings)) {
+            $string = "";
+            foreach ($strings as $lang => $value) {
+                if (!is_null($value) && $value !== "")
+                    $string .= "#".$lang."@".$value."#";
+            }
+            if (trim($string) === "")
+                return null;
+            else
+                return $string;
+        } else
+            return $strings;
+   }
+
+   function encodeSQLValue($strVal, $sqlType) {
+       if (!is_array($strVal))
+           $strVal = trim($strVal);
+
 	   if (isset($strVal) && $strVal !== null) {
 		   if ($sqlType == "STRING" || $sqlType == "TEXT") {
 		      if (strlen(trim($strVal)) == 0)
 		         return "NULL";
 		      else
-      			return "'".$strVal."'";
+      			return "'".mysql_escape_string($strVal)."'";
+      	   } else if ($sqlType == "STRING_I18N" || $sqlType == "TEXT_I18N") {
+      	      if (is_null($strVal) || is_array($strVal) && count($strVal) == 0)
+		         return "NULL";
+		      else {
+		        $val = NP_DDBB::encodeI18NSqlValue($strVal);
+		        if (!is_null($val))
+      			    return "'".mysql_escape_string($val)."'";
+      			else 
+      			    return "NULL";
+      		  }
 		   } else if ($sqlType == "BOOL") {
 			   if (isset($strVal) && $strVal != "") {
 			       if (strtolower($strVal) == "true")
@@ -245,21 +440,23 @@ class NP_DDBB {
 		   } else if ($sqlType == "DATE") {
 		       return "'".date("Y-m-d H:i:s", $strVal)."'";
 		   } else {
-			   if (isset($strVal) && $strVal != "")
+			   if (isset($strVal) && !is_null($strVal) && $strVal !== "")
 				   return $strVal;
 			   else 
-				   return 0;
+				   return "NULL";
 		   }
 	   } else {
 		   return "NULL";
 	   }
    }
-
-   public static function decodeSQLValue($strVal, $sqlType) {
+   
+   function decodeSQLValue($strVal, $sqlType) {
 	   if (isset($strVal) && $strVal !== null) {
-		   if ($sqlType == "STRING" || $sqlType == "TEXT") 
-			   return $strVal;
-		   else if ($sqlType == "BOOL") 
+		   if ($sqlType == "STRING" || $sqlType == "TEXT") {
+		       return $strVal;
+		   } else if ($sqlType == "STRING_I18N" || $sqlType == "TEXT_I18N") {
+		       return NP_DDBB::decodeI18NSqlValue($strVal);
+		   } else if ($sqlType == "BOOL") 
 			   if (isset($strVal) && $strVal != "")
 				   return ($strVal == "1");
 			   else
@@ -276,15 +473,7 @@ class NP_DDBB {
 				   return 0;
 	       else if ($sqlType == "DATE") {
 	           if (isset($strVal) && $strVal != "") {
-	                $year = substr($strVal,0,4);
-                   $mon  = substr($strVal,5,2);
-                   $day  = substr($strVal,8,2);
-                   $hour = substr($strVal,11,2);
-                   $min  = substr($strVal,14,2);
-                   $sec  = substr($strVal,17,2);
-                   //echo $year.$mon.$day.$hour.$min.$sec;
-                   //return date("l F dS, Y h:i A",mktime($hour,$min,$sec,$mon,$day,$year));	            
-                   return mktime($hour,$min,$sec,$mon,$day,$year);	            
+                   return strtotime($strVal);       
 	           } else
 	               return null;
 	       } else 
@@ -294,7 +483,7 @@ class NP_DDBB {
 	   }
    }
 
-   private function connectServer () {
+   function connectServer () {
       if ($this->config != null) {
 	      $this->dbCon = mysql_connect ($this->config ["HOST"], $this->config ["USER"], $this->config ["PASSWD"])
 		      or die ("No se pudo conectar con la BBDD: ".mysql_error());
@@ -303,76 +492,83 @@ class NP_DDBB {
       }
    }
 
-   private function disconnectServer () {
+   function disconnectServer () {
       if ($this->dbCon != null) {
    	   mysql_close($this->dbCon);
    	   $this->dbCon = null;
 	   }
    }
 
-   public function executePKSelectQuery($sql) {
+   function executePKSelectQuery($sql) {
 	   $this->connectServer();
 
 	   $resultado = mysql_query($sql);
 
 	   if (!$resultado) {
-		   throw new Exception("No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error());
+		   die("No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error());
 		   //exit;
 	   }
 
 	   $datos = mysql_fetch_assoc ($resultado);
+	   $count = mysql_affected_rows();
 
 	   mysql_free_result($resultado);
 		
 	   $this->disconnectServer();
-	   return $datos;
+	   if ($count > 0) 
+	       return $datos;
+	   else
+	       return null;
    }
 
-   public function executeSelectQuery($sql, $f = null, $params = null) {
+   function executeSelectQuery($sql, $f = null, $params = null) {
 	   if ($params == null)
 		   $params = array();
 
 	   $this->connectServer();
 
 	   $resultado = mysql_query($sql);
+	   $count = mysql_affected_rows();
 
 	   if (!$resultado) {
-		   throw new Exception("No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error());
+		   die("No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error());
 		   //exit;
 	   }
 
       $data = null;
-      if (isset($f) && $f != null && function_exists($f)) {
-   	   while ($datos = mysql_fetch_assoc ($resultado)) {
-   		   $func = new ReflectionFunction($f);
-   		   $p = array_merge(array($datos), $params);
-   		   $func->invokeArgs($p);
-   		   //$f($datos, $params);
-   	   }
-	   } else {
-	      $data = array();
-	      while ($datos = mysql_fetch_assoc ($resultado)) {
-	         $data = array_merge($data, array($datos));
-	      }
+      if ($count > 0) {
+          if (isset($f) && $f != null && function_exists($f)) {
+             while ($datos = mysql_fetch_assoc ($resultado)) {
+       	        if (version_compare(phpversion(), '5.0') < 0) {
+       	            $f($datos, $params);
+       	        } else {
+       	            $func = new ReflectionFunction($f);
+           		    $p = array_merge(array($datos), $params);
+           		    $func->invokeArgs($p);
+       	        } 
+       	     }
+    	   } else {
+    	      $data = array();
+    	      while ($datos = mysql_fetch_assoc ($resultado)) {
+    	         $data = array_merge($data, array($datos));
+    	      }
+    	   }
 	   }
 
 	   mysql_free_result($resultado);
 		
 	   $this->disconnectServer();
-	   
-	   if ($data != null)
-	      return $data;
-	   else
-	      return null;
+	  
+	   return $data;
    }
 
-   public function executeInsertUpdateQuery($sql) {
+   function executeInsertUpdateQuery($sql) {
 	   $this->connectServer();
 		
 	   $resultado = mysql_query($sql);
 	
 	   if (!$resultado) {
-		   throw new Exception("No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error());
+		   die("No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error());
 		   //exit;
 	   }
 	
@@ -383,7 +579,7 @@ class NP_DDBB {
 	   return $id;
    }
 
-   public function executeDeleteQuery($sql) {
+   function executeDeleteQuery($sql) {
 	   $this->connectServer();
 		
 	   mysql_query($sql);
@@ -395,7 +591,7 @@ class NP_DDBB {
 	   return $resultado;
    }    
   
-   public function createSQLCreateTable($data = false, $type = null) {
+   function createSQLCreateTable($data = false, $type = null) {
       if (isset($type)) {
          if ($this->dbSQL[$type] != null) {
             $sql = "CREATE TABLE IF NOT EXISTS `".$this->getTable($type)."` ("."\n";
@@ -442,20 +638,18 @@ class NP_DDBB {
       }
    }
    
-   public function createSQLDataTable($type = null) {
+   function createSQLDataTable($type = null) {
       $sql = "";
       if (isset($type)) {
          if ($this->dbSQL[$type] != null) {     
             $sql .= "\n-- Data for '".$this->getTable($type)."' --\n";
-            try {
-               $inserts = array();
-               $handler = create_function('$data, $type, $inserts, $ddbb', '$obj = new $type(); $ddbb->loadData($obj, $data); $inserts = array_merge($inserts, array($ddbb->insertObject($obj, true)));');
-               $this->executeSelectQuery("SELECT * FROM ".$this->getTable($type), $handler, array($type, &$inserts, $this));
-               if (count($inserts) > 0)
-                  $sql .= implode(";\n", $inserts).";";
-            } catch (Exception $e) {
-               $sql .= "-- ERROR obtaining data: ".$e->getMessage()."\n";
-            }
+           
+            $inserts = array();
+            $handler = create_function('$data, $type, $inserts, $ddbb', '$obj = new $type(); $ddbb->loadData($obj, $data); $inserts = array_merge($inserts, array($ddbb->insertObject($obj, true)));');
+            $this->executeSelectQuery("SELECT * FROM ".$this->getTable($type), $handler, array($type, &$inserts, $this));
+            if (count($inserts) > 0)
+               $sql .= implode(";\n", $inserts).";";
+           
             $sql .= "\n\n-- -----------------\n\n";
          } else {
             $sql .= "-- NP_SQL: No SQL data for type '$type'\n";

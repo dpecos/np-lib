@@ -42,4 +42,48 @@ function NP_UTF8_decode($obj) {
 	}
 }
 
+
+function NP_get_i18n($strings) {
+    if (is_array($strings)) {
+        if (array_key_exists(NP_LANG, $strings))
+            return $strings[NP_LANG];
+        else if (array_key_exists(NP_DEFAULT_LANG, $strings))
+            return "** Untranslated ** (".NP_DEFAULT_LANG.") ".$strings[NP_DEFAULT_LANG];
+        else {
+            $lang = array_keys($strings);
+            $lang = $lang[0];
+            return "** Untranslated ** (".$lang.") ".$strings[$lang];
+        }
+    } else if ($strings != null)
+        return "** Incorrect i18N format ** ".$strings;
+    else
+        return null;
+}
+
+function NP_set_i18n($strings, $val = null, $lang = null) {
+    if (is_string($strings)) {
+        $tmp = NP_DDBB::decodeI18NSqlValue($strings);
+        if (is_array($tmp))
+            $strings = $tmp;
+    } else if (is_null($strings)) {
+        $strings = array();
+    }
+   
+    if (is_array($strings)) {
+        if ($val === null && $lang !== null)
+            unset($strings[$lang]);
+        else {
+            if ($lang === null) 
+                $strings[NP_LANG] = $val;
+            else
+                $strings[$lang] = $val;
+        }
+        return $strings;   
+    } else {
+        if (!is_null($strings))
+            return $strings;
+        else
+            return $val;
+    }
+}
 ?>

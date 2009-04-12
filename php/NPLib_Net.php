@@ -81,13 +81,16 @@ function NP_url_decode($obj) {
 
 function NP_json_encode($obj) {
 	if (gettype($obj) == "object")
-		$obj = clone $obj;
-		
-   if (function_exists("json_encode")) {
-	   return json_encode(NP_UTF8_encode($obj));
+		if (version_compare(phpversion(), '5.0') < 0)
+			$obj = $obj;
+		else
+			$obj = clone($obj);
+				
+	if (function_exists("json_encode")) {
+		return json_encode(NP_UTF8_encode($obj));
 	} else {
-	   require_once 'Zend/Json.php';
-	   return Zend_Json::encode(NP_UTF8_encode($obj));
+		require_once 'Zend/Json.php';
+		return Zend_Json::encode(NP_UTF8_encode($obj));
 	}
 }
 
