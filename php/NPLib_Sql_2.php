@@ -86,7 +86,7 @@ class NP_DDBB {
    
    function __createSELECT_Column($colName, $sqlType) {
       if ($sqlType == "DATE") {
-        return "DATE_FORMAT(".$colName.", '%Y%m%d%H%i%s') AS ".$colName;
+        return "UNIX_TIMESTAMP(".$colName.") AS ".$colName;
       } else
         return $colName;
    }    
@@ -364,8 +364,7 @@ class NP_DDBB {
 
    function decodeI18NSqlValue($str) {
         $matches = array();
-        if ((defined("NP_LANG") || defined("NP_DEFAULT_LANG")) && 
-          preg_match_all('/#(.?.?_.?.?)@([^#]*)#/', $str, $matches)) {
+        if ((defined("NP_LANG") || defined("NP_DEFAULT_LANG")) && preg_match_all('/#(.?.?_.?.?)@([^#]*)#/', $str, $matches)) {
             $langs = $matches[1];
             $strings = $matches[2];
             
@@ -473,7 +472,7 @@ class NP_DDBB {
 				   return 0;
 	       else if ($sqlType == "DATE") {
 	           if (isset($strVal) && $strVal != "") {
-                   return strtotime($strVal);       
+                   return date($strVal);       
 	           } else
 	               return null;
 	       } else 
