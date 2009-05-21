@@ -637,6 +637,22 @@ class NP_DDBB {
       }
    }
    
+   function createSQLTruncateTable($type = null) {
+      $sql = "";
+      if (isset($type)) {
+         if ($this->dbSQL[$type] != null) {
+            $sql = "TRUNCATE TABLE `".$this->getTable($type)."`;"."\n";
+         } else {
+            return "-- NP_SQL: No SQL data for type '$type'";
+         }
+      } else {
+         foreach (array_keys($this->dbSQL) as $type) {
+            $sql .= $this->createSQLTruncateTable($type);
+         }
+      }
+      return $sql;
+   }
+   
    function createSQLDataTable($type = null) {
       $sql = "";
       if (isset($type)) {
