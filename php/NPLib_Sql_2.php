@@ -610,7 +610,7 @@ class NP_DDBB {
                $sql .= "  `".$fName."` ".$fType;
                $sql .= array_key_exists("LENGTH", $this->dbSQL[$type][$key]) ? "(".$this->dbSQL[$type][$key]["LENGTH"].") " : " ";
                $sql .= array_key_exists("NULLABLE", $this->dbSQL[$type][$key]) ? $this->dbSQL[$type][$key]["NULLABLE"]===true ? "NULL " : "NOT NULL " : "";
-               $sql .= (array_key_exists("AUTO_INCREMENT", $this->dbSQL[$type][$key]) && $this->dbSQL[$type][$key]["AUTO_INCREMENT"]==true) ? "auto_increment " : "";
+               $sql .= (array_key_exists("AUTO_INCREMENT", $this->dbSQL[$type][$key]) && $this->dbSQL[$type][$key]["AUTO_INCREMENT"] === true) ? "auto_increment " : "";
                $sql .= array_key_exists("DEFAULT", $this->dbSQL[$type][$key]) ? $this->dbSQL[$type][$key]["DEFAULT"] === null ? "default NULL " : ($this->dbSQL[$type][$key]["DEFAULT"] === "CURRENT_TIMESTAMP" ? "default CURRENT_TIMESTAMP " : "default '".$this->dbSQL[$type][$key]["DEFAULT"]."' ") : "";
                $sql .= ",\n"; 
             }
