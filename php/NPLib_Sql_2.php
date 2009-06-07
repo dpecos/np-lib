@@ -520,46 +520,56 @@ class NP_DDBB {
 	       return null;
    }
 
-   function executeSelectQuery($sql, $f = null, $params = null) {
-	   if ($params == null)
-		   $params = array();
+	function executeSelectQuery($sql, $f = null, $params = null) {
+		if ($params == null)
+		$params = array();
 
-	   $this->connectServer();
+		$this->connectServer();
 
-	   $resultado = mysql_query($sql);
-	   $count = mysql_affected_rows();
+		$queryId = null;
+		if (Logger::isEnabled()) {
+			$queryId = NPLogger::prepareSQLQuery("nplib", $sql);
+		}
 
-	   if (!$resultado) {
-		   die("No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error());
-		   //exit;
-	   }
+		$resultado = mysql_query($sql);
 
-      $data = null;
-      if ($count > 0) {
-          if (isset($f) && $f != null && function_exists($f)) {
-             while ($datos = mysql_fetch_assoc ($resultado)) {
-       	        if (version_compare(phpversion(), '5.0') < 0) {
-       	            $f($datos, $params);
-       	        } else {
-       	            $func = new ReflectionFunction($f);
-           		    $p = array_merge(array($datos), $params);
-           		    $func->invokeArgs($p);
-       	        } 
-       	     }
-    	   } else {
-    	      $data = array();
-    	      while ($datos = mysql_fetch_assoc ($resultado)) {
-    	         $data = array_merge($data, array($datos));
-    	      }
-    	   }
-	   }
+		if (!$resultado) {
+			$msg = "No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error();
+			Logger::error($msg);
+			die($msg);
+			//exit;
+		}
 
-	   mysql_free_result($resultado);
-		
-	   $this->disconnectServer();
-	  
-	   return $data;
-   }
+		if (Logger::isEnabled()) {
+			$queryId = NPLogger::logSQLQuery("nplib", $sql, $queryId, null);
+			//$queryId = Logger::logSQLQuery($sql, $queryId, $this->$dbCon);
+		}
+
+		$data = null;
+		if (isset($f) && $f != null && function_exists($f)) {
+			while ($datos = mysql_fetch_assoc ($resultado)) {
+				$func = new ReflectionFunction($f);
+				$p = array_merge(array($datos), $params);
+				$func->invokeArgs($p);
+				//$f($datos, $params);
+			}
+		} else {
+			$data = array();
+			while ($datos = mysql_fetch_assoc ($resultado)) {
+				$data = array_merge($data, array($datos));
+			}
+		}
+
+		mysql_free_result($resultado);
+
+		$this->disconnectServer();
+
+		if ($data != null)
+			return $data;
+		else
+			return null;
+	}
+
 
    function executeInsertUpdateQuery($sql) {
 	   $this->connectServer();
