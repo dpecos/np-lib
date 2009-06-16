@@ -362,7 +362,7 @@ class NP_DDBB {
    	      return $this->executeInsertUpdateQuery($sql);
    }
 
-   function decodeI18NSqlValue($str) {
+   static function decodeI18NSqlValue($str) {
         $matches = array();
         if ((defined("NP_LANG") || defined("NP_DEFAULT_LANG")) && preg_match_all('/#(.?.?_.?.?)@([^#]*)#/', $str, $matches)) {
             $langs = $matches[1];
@@ -390,7 +390,7 @@ class NP_DDBB {
             return $str;
    }
     
-   function encodeI18NSqlValue($strings) {
+   static function encodeI18NSqlValue($strings) {
         if (is_array($strings)) {
             $string = "";
             foreach ($strings as $lang => $value) {
@@ -405,7 +405,7 @@ class NP_DDBB {
             return $strings;
    }
 
-   function encodeSQLValue($strVal, $sqlType) {
+   static function encodeSQLValue($strVal, $sqlType) {
        if (!is_array($strVal))
            $strVal = trim($strVal);
 
@@ -449,7 +449,7 @@ class NP_DDBB {
 	   }
    }
    
-   function decodeSQLValue($strVal, $sqlType) {
+   static function decodeSQLValue($strVal, $sqlType) {
 	   if (isset($strVal) && $strVal !== null) {
 		   if ($sqlType == "STRING" || $sqlType == "TEXT") {
 		       return $strVal;

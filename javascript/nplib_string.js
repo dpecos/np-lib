@@ -10,63 +10,7 @@ String.prototype.trim = function() {
 	return this.replace(/^\s+|\s+$/g,"");
 }
 
-function Utf8Encode(string) {
-	string = string.replace(/\r\n/g,"\n");
-	var utftext = "";
-
-	for (var n = 0; n < string.length; n++) {
-
-		var c = string.charCodeAt(n);
-
-		if (c < 128) {
-			utftext += String.fromCharCode(c);
-		}
-		else if((c > 127) && (c < 2048)) {
-			utftext += String.fromCharCode((c >> 6) | 192);
-			utftext += String.fromCharCode((c & 63) | 128);
-		}
-		else {
-			utftext += String.fromCharCode((c >> 12) | 224);
-			utftext += String.fromCharCode(((c >> 6) & 63) | 128);
-			utftext += String.fromCharCode((c & 63) | 128);
-		}
-
-	}
-
-	return utftext;
-};
-
-function Utf8Decode (utftext) {
-	var string = "";
-	var i = 0;
-	var c = c1 = c2 = 0;
-
-	while ( i < utftext.length ) {
-
-		c = utftext.charCodeAt(i);
-
-		if (c < 128) {
-			string += String.fromCharCode(c);
-			i++;
-		}
-		else if((c > 191) && (c < 224)) {
-			c2 = utftext.charCodeAt(i+1);
-			string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
-			i += 2;
-		}
-		else {
-			c2 = utftext.charCodeAt(i+1);
-			c3 = utftext.charCodeAt(i+2);
-			string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
-			i += 3;
-		}
-
-	}
-
-	return string;
-}
-
-function str2binb (str) {
+/*function str2binb (str) {
 	var bin = Array();
 	var mask = (1 << chrsz) - 1;
 	for(var i = 0; i < str.length * chrsz; i += chrsz) {
@@ -83,140 +27,134 @@ function binb2hex (binarray) {
 		hex_tab.charAt((binarray[i>>2] >> ((3 - i%4)*8  )) & 0xF);
 	}
 	return str;
+}*/
+
+/**
+ * Encode multi-byte Unicode string into utf-8 multiple single-byte characters 
+ * (BMP / basic multilingual plane only) (instance method extending String object).
+ *
+ * Chars in range U+0080 - U+07FF are encoded in 2 chars, U+0800 - U+FFFF in 3 chars
+ *
+ * @return encoded string
+ */
+String.prototype.encodeUTF8 = function() {
+	// use regular expressions & String.replace callback function for better efficiency 
+	// than procedural approaches
+	var str = this.replace(
+			/[\u0080-\u07ff]/g,  // U+0080 - U+07FF => 2 bytes 110yyyyy, 10zzzzzz
+			function(c) { 
+				var cc = c.charCodeAt(0);
+				return String.fromCharCode(0xc0 | cc>>6, 0x80 | cc&0x3f); }
+	);
+	str = str.replace(
+			/[\u0800-\uffff]/g,  // U+0800 - U+FFFF => 3 bytes 1110xxxx, 10yyyyyy, 10zzzzzz
+			function(c) { 
+				var cc = c.charCodeAt(0); 
+				return String.fromCharCode(0xe0 | cc>>12, 0x80 | cc>>6&0x3F, 0x80 | cc&0x3f); }
+	);
+	return str;
 }
 
-var Base64 = {
-
-		// private property
-		_keyStr : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
-
-		// public method for encoding
-		encode : function (input) {
-	var output = "";
-	var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
-	var i = 0;
-
-	input = Base64._utf8_encode(input);
-
-	while (i < input.length) {
-
-		chr1 = input.charCodeAt(i++);
-		chr2 = input.charCodeAt(i++);
-		chr3 = input.charCodeAt(i++);
-
-		enc1 = chr1 >> 2;
-		enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
-		enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
-		enc4 = chr3 & 63;
-
-		if (isNaN(chr2)) {
-			enc3 = enc4 = 64;
-		} else if (isNaN(chr3)) {
-			enc4 = 64;
-		}
-
-		output = output +
-		this._keyStr.charAt(enc1) + this._keyStr.charAt(enc2) +
-		this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4);
-
-	}
-
-	return output;
-},
-
-// public method for decoding
-decode : function (input) {
-	var output = "";
-	var chr1, chr2, chr3;
-	var enc1, enc2, enc3, enc4;
-	var i = 0;
-
-	input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
-
-	while (i < input.length) {
-
-		enc1 = this._keyStr.indexOf(input.charAt(i++));
-		enc2 = this._keyStr.indexOf(input.charAt(i++));
-		enc3 = this._keyStr.indexOf(input.charAt(i++));
-		enc4 = this._keyStr.indexOf(input.charAt(i++));
-
-		chr1 = (enc1 << 2) | (enc2 >> 4);
-		chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
-		chr3 = ((enc3 & 3) << 6) | enc4;
-
-		output = output + String.fromCharCode(chr1);
-
-		if (enc3 != 64) {
-			output = output + String.fromCharCode(chr2);
-		}
-		if (enc4 != 64) {
-			output = output + String.fromCharCode(chr3);
-		}
-
-	}
-
-	output = Base64._utf8_decode(output);
-
-	return output;
-
-},
-
-// private method for UTF-8 encoding
-_utf8_encode : function (string) {
-	string = string.replace(/\r\n/g,"\n");
-	var utftext = "";
-
-	for (var n = 0; n < string.length; n++) {
-
-		var c = string.charCodeAt(n);
-
-		if (c < 128) {
-			utftext += String.fromCharCode(c);
-		}
-		else if((c > 127) && (c < 2048)) {
-			utftext += String.fromCharCode((c >> 6) | 192);
-			utftext += String.fromCharCode((c & 63) | 128);
-		}
-		else {
-			utftext += String.fromCharCode((c >> 12) | 224);
-			utftext += String.fromCharCode(((c >> 6) & 63) | 128);
-			utftext += String.fromCharCode((c & 63) | 128);
-		}
-
-	}
-
-	return utftext;
-},
-
-// private method for UTF-8 decoding
-_utf8_decode : function (utftext) {
-	var string = "";
-	var i = 0;
-	var c = c1 = c2 = 0;
-
-	while ( i < utftext.length ) {
-
-		c = utftext.charCodeAt(i);
-
-		if (c < 128) {
-			string += String.fromCharCode(c);
-			i++;
-		}
-		else if((c > 191) && (c < 224)) {
-			c2 = utftext.charCodeAt(i+1);
-			string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
-			i += 2;
-		}
-		else {
-			c2 = utftext.charCodeAt(i+1);
-			c3 = utftext.charCodeAt(i+2);
-			string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
-			i += 3;
-		}
-
-	}
-
-	return string;
+/**
+ * Decode utf-8 encoded string back into multi-byte Unicode characters
+ * (instance method extending String object).
+ *
+ * @return decoded string
+ */
+String.prototype.decodeUTF8 = function() {
+	var str = this.replace(
+			/[\u00c0-\u00df][\u0080-\u00bf]/g,                 // 2-byte chars
+			function(c) {  // (note parentheses for precence)
+				var cc = (c.charCodeAt(0)&0x1f)<<6 | c.charCodeAt(1)&0x3f;
+				return String.fromCharCode(cc); }
+	);
+	str = str.replace(
+			/[\u00e0-\u00ef][\u0080-\u00bf][\u0080-\u00bf]/g,  // 3-byte chars
+			function(c) {  // (note parentheses for precence)
+				var cc = ((c.charCodeAt(0)&0x0f)<<12) | ((c.charCodeAt(1)&0x3f)<<6) | ( c.charCodeAt(2)&0x3f); 
+				return String.fromCharCode(cc); }
+	);
+	return str;
 }
 
+/**
+ * Encode string into Base64, as defined by RFC 4648 [http://tools.ietf.org/html/rfc4648]
+ * (instance method extending String object). As per RFC 4648, no newlines are added.
+ *
+ * @param utf8encode optional parameter, if set to true Unicode string is encoded to UTF8 before 
+ *                   conversion to base64; otherwise string is assumed to be 8-bit characters
+ * @return           base64-encoded string
+ */ 
+
+String.prototype.encodeBase64 = function(utf8encode) {  // http://tools.ietf.org/html/rfc4648
+	var b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+	utf8encode =  (typeof utf8encode == 'undefined') ? false : utf8encode;
+	var o1, o2, o3, bits, h1, h2, h3, h4, e=[], pad = '', c, plain, coded;
+
+	plain = utf8encode ? this.encodeUTF8() : this;
+
+	c = plain.length % 3;  // pad string to length of multiple of 3
+	if (c > 0) { while (c++ < 3) { pad += '='; plain += '\0'; } }
+	// note: doing padding here saves us doing special-case packing for trailing 1 or 2 chars
+
+	for (c=0; c<plain.length; c+=3) {  // pack three octets into four hexets
+		o1 = plain.charCodeAt(c);
+		o2 = plain.charCodeAt(c+1);
+		o3 = plain.charCodeAt(c+2);
+
+		bits = o1<<16 | o2<<8 | o3;
+
+		h1 = bits>>18 & 0x3f;
+		h2 = bits>>12 & 0x3f;
+		h3 = bits>>6 & 0x3f;
+		h4 = bits & 0x3f;
+
+		// use hextets to index into b64 string
+		e[c/3] = b64.charAt(h1) + b64.charAt(h2) + b64.charAt(h3) + b64.charAt(h4);
+	}
+	coded = e.join('');  // join() is far faster than repeated string concatenation
+
+	// replace 'A's from padded nulls with '='s
+	coded = coded.slice(0, coded.length-pad.length) + pad;
+
+	return coded;
+}
+
+/**
+ * Decode string from Base64, as defined by RFC 4648 [http://tools.ietf.org/html/rfc4648]
+ * (instance method extending String object). As per RFC 4648, newlines are not catered for.
+ *
+ * @param utf8decode optional parameter, if set to true UTF8 string is decoded back to Unicode  
+ *                   after conversion from base64
+ * @return           decoded string
+ */ 
+String.prototype.decodeBase64 = function(utf8decode) {
+	var b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+	utf8decode =  (typeof utf8decode == 'undefined') ? false : utf8decode;
+	var o1, o2, o3, h1, h2, h3, h4, bits, d=[], plain, coded;
+
+	coded = utf8decode ? this.decodeUTF8() : this;
+
+	for (var c=0; c<coded.length; c+=4) {  // unpack four hexets into three octets
+		h1 = b64.indexOf(coded.charAt(c));
+		h2 = b64.indexOf(coded.charAt(c+1));
+		h3 = b64.indexOf(coded.charAt(c+2));
+		h4 = b64.indexOf(coded.charAt(c+3));
+
+		bits = h1<<18 | h2<<12 | h3<<6 | h4;
+
+		o1 = bits>>>16 & 0xff;
+		o2 = bits>>>8 & 0xff;
+		o3 = bits & 0xff;
+
+		d[c/4] = String.fromCharCode(o1, o2, o3);
+		// check for padding
+		if (h4 == 0x40) d[c/4] = String.fromCharCode(o1, o2);
+		if (h3 == 0x40) d[c/4] = String.fromCharCode(o1);
+	}
+	plain = d.join('');  // join() is far faster than repeated string concatenation
+
+	return utf8decode ? plain.decodeUTF8() : plain; 
 }
