@@ -72,7 +72,8 @@
 *
 * @author  Richard Heyes <richard@phpguru.org>
 * @version $Revision: 1.3 $
-* @package Mail
+* @package    np-lib
+* @subpackage Mail
 */
 
 class Mail_mimePart {

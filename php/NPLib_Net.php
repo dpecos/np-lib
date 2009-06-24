@@ -1,4 +1,17 @@
 <?php
+/** 
+ * NPLib - PHP
+ * 
+ * Network related functions
+ * 
+ * @package np-lib
+ * @subpackage 
+ * @version 20090624
+ * 
+ * @author Daniel Pecos Martínez
+ * @copyright Copyright (c) Daniel Pecos Martínez 
+ * @license http://www.gnu.org/licenses/lgpl.html  LGPL License
+ */
 require_once("NPLib_Common.php");
 require_once("mail/htmlMimeMail.php");
 

@@ -1,15 +1,42 @@
 <?php
+/** 
+ * NPLib - PHP
+ * 
+ * Database API - Deprecated!
+ * 
+ * @package np-lib
+ * @subpackage 
+ * @version 20090624
+ * 
+ * @author Daniel Pecos Martínez
+ * @copyright Copyright (c) Daniel Pecos Martínez 
+ * @license http://www.gnu.org/licenses/lgpl.html  LGPL License
+ */
+
+/**
+ * @ignore
+ */
 require_once("NPLib_Common.php");
 
+/**
+ * @ignore
+ */
 $npsql_dbconfig = null;
 
+/**
+ * @ignore
+ * @deprecated Use NP_DDBB object instead
+ */
 function __createSELECT_Column($colName, $sqlType) {
     if ($sqlType == "DATE") {
         return "DATE_FORMAT(".$colName.", '%Y%m%d%H%i%s') AS ".$colName;
     } else
         return $colName;
 }
-
+/**
+ * @ignore
+ * @deprecated Use NP_DDBB object instead
+ */
 function __createSELECT_AllColumns($obj, $field, $ddbb_mapping, $ddbb_types, &$first) {
     $sql = "";
   
@@ -49,7 +76,10 @@ function __createSELECT_AllColumns($obj, $field, $ddbb_mapping, $ddbb_types, &$f
     }
 	return $sql;
 }
-
+/**
+ * @ignore
+ * @deprecated Use NP_DDBB object instead
+ */
 function NP_createSELECT($obj, $ddbb_table, $ddbb_mapping, $ddbb_types, $whereCondition) {
     
    $isFirst = true;
@@ -59,7 +89,10 @@ function NP_createSELECT($obj, $ddbb_table, $ddbb_mapping, $ddbb_types, $whereCo
     
    return $sql;
 }
-
+/**
+ * @ignore
+ * @deprecated Use NP_DDBB object instead
+ */
 function NP_loadData(&$obj, &$data, $ddbb_mapping, $ddbb_types) {
    //$object_name = get_class($object);
 	foreach (array_values($ddbb_mapping) as $dbFieldName) {
@@ -101,7 +134,10 @@ function NP_loadData(&$obj, &$data, $ddbb_mapping, $ddbb_types) {
 		
 	}
 }
-
+/**
+ * @ignore
+ * @deprecated Use NP_DDBB object instead
+ */
 function NP_insertObject($object, $ddbb_table, $ddbb_mapping, $ddbb_types) {    	
 		$varNames = "";
 		$varValues = "";
@@ -153,7 +189,10 @@ function NP_insertObject($object, $ddbb_table, $ddbb_mapping, $ddbb_types) {
 		
 		return NP_executeInsertUpdate($sql);
 }
-
+/**
+ * @ignore
+ * @deprecated Use NP_DDBB object instead
+ */
 function encodeSQLValue($strVal, $sqlType) {
 	if (isset($strVal) && $strVal !== null) {
 		if ($sqlType == "STRING") {
@@ -184,7 +223,10 @@ function encodeSQLValue($strVal, $sqlType) {
 		return "NULL";
 	}
 }
-
+/**
+ * @ignore
+ * @deprecated Use NP_DDBB object instead
+ */
 function decodeSQLValue($strVal, $sqlType) {
 	if (isset($strVal) && $strVal !== null) {
 		if ($sqlType == "STRING") 
@@ -223,14 +265,20 @@ function decodeSQLValue($strVal, $sqlType) {
 		return null;
 	}
 }
-
+/**
+ * @ignore
+ * @deprecated Use NP_DDBB object instead
+ */
 function __NP_initDDBB($dbconfig) {
 	global $npsql_dbconfig;
 	
 	if ($npsql_dbconfig == null)
 		$npsql_dbconfig = $dbconfig;
 }
-
+/**
+ * @ignore
+ * @deprecated Use NP_DDBB object instead
+ */
 function __NP_connectSQL () {
 	global $npsql_dbconfig;
 
@@ -240,11 +288,17 @@ function __NP_connectSQL () {
 		or die ("No se encontró la BBDD en el servidor.");
 	return $db_con;
 }
-
+/**
+ * @ignore
+ * @deprecated Use NP_DDBB object instead
+ */
 function __NP_disconnectSQL ($db_con) {
 	//mysql_close($db_con);
 }
-
+/**
+ * @ignore
+ * @deprecated Use NP_DDBB object instead
+ */
 function NP_executePKSelect($sql) {
 	$con = __NP_connectSQL();
 
@@ -262,7 +316,10 @@ function NP_executePKSelect($sql) {
 	__NP_disconnectSQL($con);
 	return $datos;
 }
-
+/**
+ * @ignore
+ * @deprecated Use NP_DDBB object instead
+ */
 function NP_executeSelect($sql, $f, $params = null) {
 	if ($params == null)
 		$params = array();
@@ -287,7 +344,10 @@ function NP_executeSelect($sql, $f, $params = null) {
 		
 	__NP_disconnectSQL($con);
 }
-
+/**
+ * @ignore
+ * @deprecated Use NP_DDBB object instead
+ */
 function NP_executeInsertUpdate($sql) {
 	$con = __NP_connectSQL();
 		
@@ -304,7 +364,10 @@ function NP_executeInsertUpdate($sql) {
 	
 	return $id;
 }
-
+/**
+ * @ignore
+ * @deprecated Use NP_DDBB object instead
+ */
 function NP_executeDelete($sql) {
 	$con = __NP_connectSQL();
 		

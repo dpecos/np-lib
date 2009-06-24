@@ -1,4 +1,17 @@
 <?
+/** 
+ * NPLib - PHP
+ * 
+ * Database API
+ * 
+ * @package np-lib
+ * @subpackage 
+ * @version 20090624
+ * 
+ * @author Daniel Pecos Martínez
+ * @copyright Copyright (c) Daniel Pecos Martínez 
+ * @license http://www.gnu.org/licenses/lgpl.html  LGPL License
+ */
 require_once("NPLib_Common.php");
 
 class NP_DDBB {
@@ -11,6 +24,14 @@ class NP_DDBB {
    var $dbTables;
    var $dbSQL;
    
+   /**
+    * Initializes an NP_DDBB instance with known object-relation data
+    * @param array $dbconfig Array containing database connection settings
+    * @param array $dbMappings Array containing mappings between object members and table fields
+    * @param array $dbTypes Array containing class member SQL data types
+    * @param array $dbTables Array containing mappings between object and tables
+    * @param array $dbSQL Array containing object member SQL additional parameters
+    */
    function __construct ($dbconfig = null, $dbMappings = null, $dbTypes = null, $dbTables = null, $dbSQL = null) {
 	   $this->setDDBBConfig($dbconfig);
 	   
@@ -27,14 +48,30 @@ class NP_DDBB {
       }
    }
    
+   /**
+    * Sets database connection data
+    * @param array $dbconfig Array containing database connection settings
+    */
    function setDDBBConfig($dbconfig) {
       $this->config = $dbconfig;
    }
    
+   /**
+    * Return if the object is initialized with database connection data
+    * @return boolean
+    */
    function isInitialized() {
       return $this->config != null;
    }
    
+   /**
+    * Adds object-relation data about $objType class
+    * @param string $objType Class name of the object-relation data
+    * @param string $sqlTable Table name used to store objectos of given class name type
+    * @param array $dbMappings Array containing mappings between class members and table fields
+    * @param array $dbTypes Array containing object member SQL data types
+    * @param array $sqlInfo Array containing object member SQL additional parameters
+    */
    function addConfig($objType, $sqlTable, $sqlMappings, $sqlTypes, $sqlInfo = null) {
       $this->dbMappings[$objType] = $sqlMappings;
       $this->dbTypes[$objType] = $sqlTypes;
@@ -42,10 +79,23 @@ class NP_DDBB {
       $this->dbSQL[$objType] = $sqlInfo === null ? array() : $sqlInfo;
    }
    
+   /**
+    * Associates one class name with a table name
+    * @param string $objType Class name of the object-relation data
+    * @param string $sqlTable Table name used to store objectos of given class name type
+    */
    function addTable($objType, $sqlTable) {
       $this->addConfig($objType, $sqlTable, array(), array(), array());
    }
    
+   /**
+    * Adds object-relation data for a property of an already associated class
+    * @param string $objType Class name of the object-relation data
+    * @param string $fieldName Name of the property of the class
+    * @param string $sqlFieldName Name of the field in the table for $fieldName
+    * @param string $sqlType SQL type for field $sqlFieldName
+    * @param array $sqlInfo Additions SQL info for field $sqlFieldName
+    */
    function addField($objType, $fieldName, $sqlFieldName, $sqlType, $sqlInfo) {
       if (array_key_exists($objType, $this->dbMappings)) {
          $this->dbMappings[$objType][$fieldName] = $sqlFieldName != null ? $sqlFieldName : $fieldName;

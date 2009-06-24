@@ -19,7 +19,8 @@
 * @author  Richard Heyes <richard@phpguru.org>
 * @author  Chuck Hagenbuch <chuck@horde.org>
 * @version $Revision: 1.1 $
-* @package Mail
+* @package    np-lib
+* @subpackage Mail
 */
 
 class Mail_RFC822

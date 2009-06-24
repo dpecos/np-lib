@@ -4,6 +4,8 @@
 * Project........: SMTP Class
 * Version........: 1.0.5
 * Last Modified..: 21 December 2001
+* @package    np-lib
+* @subpackage Mail
 */
 
 	define('SMTP_STATUS_NOT_CONNECTED', 1, TRUE);

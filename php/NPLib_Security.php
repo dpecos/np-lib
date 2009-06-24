@@ -1,4 +1,17 @@
 <?php
+/** 
+ * NPLib - PHP
+ * 
+ * Security related functions
+ * 
+ * @package np-lib
+ * @subpackage 
+ * @version 20090624
+ * 
+ * @author Daniel Pecos Martínez
+ * @copyright Copyright (c) Daniel Pecos Martínez 
+ * @license http://www.gnu.org/licenses/lgpl.html  LGPL License
+ */
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 /*  AES implementation in PHP (c) Chris Veness 2005-2009. Right of free use is granted for all    */
 /*    commercial or non-commercial use under LGPL licence. No warranty of any form is offered.    */

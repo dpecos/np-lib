@@ -1,4 +1,17 @@
 <?
+/** 
+ * NPLib - PHP
+ * 
+ * Common used functions
+ * 
+ * @package np-lib
+ * @subpackage 
+ * @version 20090624
+ * 
+ * @author Daniel Pecos Martínez
+ * @copyright Copyright (c) Daniel Pecos Martínez 
+ * @license http://www.gnu.org/licenses/lgpl.html  LGPL License
+ */
 function add_include_path ($path)
 {
     foreach (func_get_args() AS $path)

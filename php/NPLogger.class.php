@@ -1,4 +1,25 @@
 <?php
+/** 
+ * NPLib - PHP
+ * 
+ * Logging API
+ * 
+ * @package np-lib
+ * @subpackage 
+ * @version 20090624
+ * 
+ * @author Daniel Pecos Martínez
+ * @copyright Copyright (c) Daniel Pecos Martínez 
+ * @license http://www.gnu.org/licenses/lgpl.html  LGPL License
+ */
+
+
+/**
+ * TEST
+ * @param $name
+ * @param $msg
+ * @return unknown_type
+ */
 function NP_default_log_formatter($name, $msg) {
 	$session = "-";
 	if (isset($_SESSION))

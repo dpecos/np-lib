@@ -17,6 +17,8 @@
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 * 
 * © Copyright 2004 Richard Heyes
+* @package    np-lib
+* @subpackage Mail
 */
 
 require_once(dirname(__FILE__) . '/mimePart.php');
