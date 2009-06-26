@@ -136,7 +136,7 @@ function SubWord($w) {    // apply SBox to 4-byte word w
 
 function RotWord($w) {    // rotate 4-byte word w left by one byte
 	$tmp = $w[0];
-	for ($i=0; $i<4; $i++) $w[$i] = $w[$i+1];
+	for ($i=0; $i<3; $i++) $w[$i] = $w[$i+1];
 	$w[3] = $tmp;
 	return $w;
 }
