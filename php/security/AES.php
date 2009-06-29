@@ -5,7 +5,7 @@
  * Security related functions
  * 
  * @package np-lib
- * @subpackage 
+ * @subpackage security
  * @version 20090624
  * 
  * @author Daniel Pecos Martínez
@@ -25,6 +25,7 @@
  * @param w     key schedule as 2D byte-array (Nr+1 x Nb bytes) -
  *              generated from the cipher key by KeyExpansion()
  * @return      ciphertext as byte-array (16 bytes)
+ * @access private 
  */
 function Cipher($input, $w) {    // main Cipher function [§5.1]
 	$Nb = 4;                 // block size (in words): no of columns in state (fixed at 4 for AES)
@@ -51,7 +52,9 @@ function Cipher($input, $w) {    // main Cipher function [§5.1]
 	return $output;
 }
 
-
+/**
+ * @access private
+ */
 function AddRoundKey($state, $w, $rnd, $Nb) {  // xor Round Key into state S [§5.1.4]
 	for ($r=0; $r<4; $r++) {
 		for ($c=0; $c<$Nb; $c++) $state[$r][$c] ^= $w[$rnd*4+$c][$r];
@@ -59,6 +62,9 @@ function AddRoundKey($state, $w, $rnd, $Nb) {  // xor Round Key into state S [§5
 	return $state;
 }
 
+/**
+ * @access private
+ */
 function SubBytes($s, $Nb) {    // apply SBox to state S [§5.1.1]
 	global $Sbox;  // PHP needs explicit declaration to access global variables!
 	for ($r=0; $r<4; $r++) {
@@ -67,6 +73,9 @@ function SubBytes($s, $Nb) {    // apply SBox to state S [§5.1.1]
 	return $s;
 }
 
+/**
+ * @access private
+ */
 function ShiftRows($s, $Nb) {    // shift row r of state S left by r bytes [§5.1.2]
 	$t = array(4);
 	for ($r=1; $r<4; $r++) {
@@ -76,6 +85,9 @@ function ShiftRows($s, $Nb) {    // shift row r of state S left by r bytes [§5.1
 	return $s;  // see fp.gladman.plus.com/cryptography_technology/rijndael/aes.spec.311.pdf
 }
 
+/**
+ * @access private
+ */
 function MixColumns($s, $Nb) {   // combine bytes of each col of state S [§5.1.3]
 	for ($c=0; $c<4; $c++) {
 		$a = array(4);  // 'a' is a copy of the current column from 's'
@@ -99,6 +111,7 @@ function MixColumns($s, $Nb) {   // combine bytes of each col of state S [§5.1.3
  *
  * @param key cipher key byte-array (16 bytes)
  * @return    key schedule as 2D byte-array (Nr+1 x Nb bytes)
+ * @access private 
  */
 function KeyExpansion($key) {  // generate Key Schedule from Cipher Key [§5.2]
 	global $Rcon;  // PHP needs explicit declaration to access global variables!
@@ -128,12 +141,18 @@ function KeyExpansion($key) {  // generate Key Schedule from Cipher Key [§5.2]
 	return $w;
 }
 
+/**
+ * @access private
+ */
 function SubWord($w) {    // apply SBox to 4-byte word w
 	global $Sbox;  // PHP needs explicit declaration to access global variables!
 	for ($i=0; $i<4; $i++) $w[$i] = $Sbox[$w[$i]];
 	return $w;
 }
 
+/**
+ * @access private
+ */
 function RotWord($w) {    // rotate 4-byte word w left by one byte
 	$tmp = $w[0];
 	for ($i=0; $i<3; $i++) $w[$i] = $w[$i+1];
@@ -185,6 +204,7 @@ $Rcon = array( array(0x00, 0x00, 0x00, 0x00),
  * @param password  the password to use to generate a key
  * @param nBits     number of bits to be used in the key (128, 192, or 256)
  * @return          encrypted text
+ * @access private
  */
 function AESEncryptCtr($plaintext, $password, $nBits) {
 	$blockSize = 16;  // block size fixed at 16 bytes / 128 bits (Nb=4) for AES
@@ -251,6 +271,7 @@ function AESEncryptCtr($plaintext, $password, $nBits) {
  * @param password   the password to use to generate a key
  * @param nBits      number of bits to be used in the key (128, 192, or 256)
  * @return           decrypted text
+ * @access private 
  */
 function AESDecryptCtr($ciphertext, $password, $nBits) {
 	$blockSize = 16;  // block size fixed at 16 bytes / 128 bits (Nb=4) for AES
@@ -305,12 +326,13 @@ function AESDecryptCtr($ciphertext, $password, $nBits) {
 }
 
 
-/*
+/**
  * Unsigned right shift function, since PHP has neither >>> operator nor unsigned ints
  *
  * @param a  number to be shifted (32-bit integer)
  * @param b  number of bits to shift a to the right (0..31)
  * @return   a right-shifted and zero-filled by b bits
+ * @access private 
  */
 function urs($a, $b) {
 	$a &= 0xffffffff; $b &= 0x1f;  // (bounds check)
