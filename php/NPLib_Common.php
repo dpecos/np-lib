@@ -12,7 +12,8 @@
  * @copyright Copyright (c) Daniel Pecos Martínez 
  * @license http://www.gnu.org/licenses/lgpl.html  LGPL License
  */
-function add_include_path ($path)
+ 
+function NP_addIncludePath ($path)
 {
     foreach (func_get_args() AS $path)
     {
@@ -31,7 +32,7 @@ function add_include_path ($path)
     }
 }
 
-function remove_include_path ($path)
+function NP_removeIncludePath ($path)
 {
     foreach (func_get_args() AS $path)
     {
@@ -53,5 +54,5 @@ function remove_include_path ($path)
 }
 
 
-add_include_path(dirname(__FILE__));
+NP_addIncludePath(dirname(__FILE__));
 ?>

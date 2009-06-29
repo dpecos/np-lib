@@ -15,7 +15,7 @@
 require_once("NPLib_Common.php");
 require_once("mail/htmlMimeMail.php");
 
-function redirect($page) {
+function NP_redirect($page) {
    if (isset($_ENV['HTTP_HOST']) && isset($_ENV["SCRIPT_URL"])) {
       $host  = $_ENV['HTTP_HOST'];
       if (NP_endsWith(".php", $_ENV["SCRIPT_URL"]))
@@ -33,7 +33,13 @@ function redirect($page) {
 	exit;
 }
 
+/**
+ * @deprecated Use NP_sendMail instead
+ */
 function sendMail($from, $to, $subject, $body) {
+   return NP_sendMail($from, $to, $subject, $body);
+}
+function NP_sendMail($from, $to, $subject, $body) {
     $mail = new htmlMimeMail();
     $mail->setFrom($from);
     $mail->setSubject($subject);
@@ -46,7 +52,13 @@ function sendMail($from, $to, $subject, $body) {
     return $result;
 }
 
+/**
+ * @deprecated Use NP_sendHTMLMail instead
+ */
 function sendHTMLMail($from, $to, $subject, $body) {
+   return NP_sendHTMLMail($from, $to, $subject, $body);
+}
+function NP_sendHTMLMail($from, $to, $subject, $body) {
     $mail = new htmlMimeMail();
     $mail->setFrom($from);
     $mail->setSubject($subject);
@@ -59,7 +71,7 @@ function sendHTMLMail($from, $to, $subject, $body) {
     return $result;
 }
 
-function get_referer() {
+function NP_get_referer() {
     if (isset($_SERVER['HTTP_REFERER']))
         $referer = $_SERVER['HTTP_REFERER'];
     else if (isset($_ENV['HTTP_REFERER']))
