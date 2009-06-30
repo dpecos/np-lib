@@ -250,20 +250,23 @@ class NP_YUI {
       
       $columnsJS = "";
    	  foreach ($this->columns as $name => $data) {
-		 $columnsJS .= '{ key: "'.$name.'", ';
+		 $columnsJS .= '{ key: "'.$name.'",';
 		 if (array_key_exists("label", $data)) 
-		 	$columnsJS .= 'label: "'.$data['label'].'", ';
+		 	$columnsJS .= 'label: "'.$data['label'].'",';
 		 if (array_key_exists("sortable", $data)) 
-		 	$columnsJS .= 'sortable: '.($data['sortable'] ? "true" : "false").', ';		 	
+		 	$columnsJS .= 'sortable: '.($data['sortable'] ? "true" : "false").',';		 	
 		 if (array_key_exists("editor", $data)) 
-		 	$columnsJS .= 'editor: '.$data['editor'].', ';
-		 $columnsJS .= "}, ";		 	
+		 	$columnsJS .= 'editor: '.$data['editor'].',';
+		 $columnsJS = substr($columnsJS, 0, strlen($columnsJS) - 1);
+		 $columnsJS .= "},";		 	
 	  }
+	  $columnsJS = substr($columnsJS, 0, strlen($columnsJS) - 1);
 	  
 	  $fieldsJS = "";
 	  foreach ($this->fields as $f) {
-	  	 $fieldsJS .= '"'.$f.'", ';
+	  	 $fieldsJS .= '"'.$f.'",';
 	  }
+	  $fieldsJS = substr($fieldsJS, 0, strlen($fieldsJS) - 1);
 ?>
       <?= $class ?>ColumnDefs = [ <?= $columnsJS ?> ];
 
