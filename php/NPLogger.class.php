@@ -41,7 +41,7 @@ class NPLogger {
 	}
 	
 	static function init($name, $file, $level, $formatter = null) {
-		if (!array_key_exists($name, NPLogger::$loggers) && is_writable($file)) {
+		if (!array_key_exists($name, NPLogger::$loggers) && (file_exists($file) && is_writable($file) || !file_exists($file))) {
 			NPLogger::$loggers[$name] = array();
 			NPLogger::$loggers[$name]["time"] = microtime(true);
 
