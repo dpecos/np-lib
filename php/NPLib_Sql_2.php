@@ -123,6 +123,13 @@ class NP_DDBB {
       else
         return $this->dbTypes[$objType][$fieldName];
    }
+   
+   function getSQLInfo($objType, $fieldName) { 
+      if ($fieldName == null)
+         return $this->dbSQL[$objType];
+      else
+        return $this->dbSQL[$objType][$fieldName];
+   }
      
    function buildSELECT($obj, $whereCondition) {
       $isFirst = true;
@@ -230,7 +237,7 @@ class NP_DDBB {
    }  
    
    
-   function __createInsertValuesList($ddbb_mapping, $ddbb_types, $object, $var, $value) {
+   function __createInsertValuesList($ddbb_mapping, $ddbb_types, $ddbb_sql, $object, $var, $value) {
        $varNames = array();
        $varValues = array();
        $pkNames = array();
@@ -241,10 +248,11 @@ class NP_DDBB {
            
            $ddbb_mapping = $this->getMapping($object_name, null);
            $ddbb_types = $this->getType($object_name, null);
+           $ddbb_sql = $this->getSQLInfo($object_name, null);
     	
     	   foreach (get_object_vars($object) as $var => $value) {
     		   if (array_key_exists($var, $ddbb_mapping)) {
-    		       $data = $this->__createInsertValuesList($ddbb_mapping, $ddbb_types, $object, $var, $value);
+    		       $data = $this->__createInsertValuesList($ddbb_mapping, $ddbb_types, $ddbb_sql, $object, $var, $value);
     		       $varNames = array_merge_recursive($varNames, $data[0]);
     		       $varValues = array_merge_recursive($varValues, $data[1]);
     		       $pkNames = array_merge_recursive($pkNames, $data[2]);
@@ -257,7 +265,7 @@ class NP_DDBB {
     
                foreach ($iter as $objvar => $objvalue) {
     		      if (array_key_exists($objvar, $ddbb_mapping[$var])) {
-        	        $data = $this->__createInsertValuesList($ddbb_mapping[$var], $ddbb_types[$var], $value, $objvar, $objvalue);
+        	        $data = $this->__createInsertValuesList($ddbb_mapping[$var], $ddbb_types[$var], $ddbb_sql, $value, $objvar, $objvalue);
     	            $varNames = array_merge_recursive($varNames, $data[0]);
     	            $varValues = array_merge_recursive($varValues, $data[1]);
     	            $pkNames = array_merge_recursive($pkNames, $data[2]);
@@ -265,14 +273,16 @@ class NP_DDBB {
     	       } 
            } else {
         	   if ($value !== null) {
-        		   $varNames[] = $ddbb_mapping[$var];
-        		   $varValues[] = NP_DDBB::encodeSQLValue($value, $ddbb_types[$var]);
-        		   if (strlen($object_name) > 0 &&
-        		       array_key_exists($object_name, $this->dbSQL) && 
-        		       array_key_exists($var, $this->dbSQL[$object_name]) && 
-        		       array_key_exists("PK", $this->dbSQL[$object_name][$var]) && 
-        		       $this->dbSQL[$object_name][$var]["PK"])
-        		      $pkNames[$var] = $ddbb_mapping[$var];
+        	   	   if (!array_key_exists("FOREIGN_FIELD", $ddbb_sql[$var]) || array_key_exists("FOREIGN_FIELD", $ddbb_sql[$var]) && !$ddbb_sql[$var]["FOREIGN_FIELD"]) { 
+	        		   $varNames[] = $ddbb_mapping[$var];
+	        		   $varValues[] = NP_DDBB::encodeSQLValue($value, $ddbb_types[$var]);
+	        		   if (strlen($object_name) > 0 &&
+	        		       $ddbb_sql != null && 
+	        		       array_key_exists($var, $ddbb_sql) && 
+	        		       array_key_exists("PK", $ddbb_sql[$var]) && 
+	        		       $ddbb_sql[$var]["PK"])
+	        		      $pkNames[$var] = $ddbb_mapping[$var];
+        	   	   }
         	   }
            }
        }
@@ -283,7 +293,7 @@ class NP_DDBB {
        $varNames = null;
        $varValues = null;
        
-       $data = $this->__createInsertValuesList(null, null, $object, null, null);
+       $data = $this->__createInsertValuesList(null, null, null, $object, null, null);
        $varNames = $data[0];
        $varValues = $data[1];
        
@@ -375,7 +385,7 @@ class NP_DDBB {
        $varNames = null;
        $varValues = null;
        
-       $data = $this->__createInsertValuesList(null, null, $object, null, null);
+       $data = $this->__createInsertValuesList(null, null, null, $object, null, null);
        $varNames = $data[0];
        $varValues = $data[1];
        $pkNames = $data[2];
