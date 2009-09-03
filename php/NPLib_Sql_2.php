@@ -421,6 +421,47 @@ class NP_DDBB {
 	   else
    	      return $this->executeInsertUpdateQuery($sql);
    }
+   
+   function deleteObject($object, $returnSQL = false) {
+	   $varNames = null;
+       $varValues = null;
+       
+       $data = $this->__createInsertValuesList(null, null, null, $object, null, null);
+       $varNames = $data[0];
+       $varValues = $data[1];
+       $pkNames = $data[2];
+         
+       $fields = array_combine($varNames, $varValues);
+		       
+	   $object_name = get_class($object);
+	   $sql = "DELETE FROM ".$this->getTable($object_name);
+	   $first = true;
+	   $sqlWhere = "";
+	   $firstWhere = true;
+	   
+	   foreach ($fields as $name => $value) {
+          $pkFieldName = array_search ($name, $pkNames);
+	      if (strlen($pkFieldName) > 0) {
+	        if (!$firstWhere) {
+                $sqlWhere .= " AND ";
+            } 
+            $firstWhere = false;
+            $sqlWhere .= "`".$name."`=".$value;
+	      } else {
+            if (!$first) {
+                $sql .= ", ";
+            } 
+            $first = false;
+            $sql .= "`".$name."`=".$value;
+	      }
+	   }
+	   $sql .= " WHERE ".$sqlWhere;
+
+	   if ($returnSQL) 
+	      return $sql;
+	   else
+   	      return $this->executeDeleteQuery($sql);
+   }
 
    static function decodeI18NSqlValue($str) {
         $matches = array();
