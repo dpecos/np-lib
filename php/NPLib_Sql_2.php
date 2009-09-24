@@ -636,7 +636,7 @@ class NP_DDBB {
 
 		if (!$resultado) {
 			$msg = "No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error();
-			Logger::error($msg);
+			NPLogger::error("nplib", $msg);
 			die($msg);
 			//exit;
 		}

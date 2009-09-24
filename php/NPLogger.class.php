@@ -86,7 +86,7 @@ class NPLogger {
 				fwrite(NPLogger::$files[NPLogger::$loggers[$name]["logfile"]], NPLogger::$loggers[$name]["formatter"]->invokeArgs(array($name, $msg)));
 			else
 				fwrite(NPLogger::$files[NPLogger::$loggers[$name]["logfile"]], $msg);
-			flush(NPLogger::$loggers[$name]["logfile"]);
+			//flush(NPLogger::$loggers[$name]["logfile"]);
 		}
 	}
 	

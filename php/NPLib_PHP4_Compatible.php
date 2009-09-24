@@ -12,9 +12,9 @@
  * @copyright Copyright (c) Daniel Pecos Martínez 
  * @license http://www.gnu.org/licenses/lgpl.html  LGPL License
  */
-if (version_compare(phpversion(), '5.0') < 0) {
 
-function array_combine($arr1, $arr2) {
+if ( !function_exists('array_combine')) {
+  function array_combine($arr1, $arr2) {
     $out = array();
    
     $arr1 = array_values($arr1);
@@ -25,8 +25,21 @@ function array_combine($arr1, $arr2) {
     }
    
     return $out;
+  }
 }
 
-
+if ( !function_exists('sys_get_temp_dir')) {
+  function sys_get_temp_dir() {
+    if (!empty($_ENV['TMP'])) { return realpath($_ENV['TMP']); }
+    if (!empty($_ENV['TMPDIR'])) { return realpath( $_ENV['TMPDIR']); }
+    if (!empty($_ENV['TEMP'])) { return realpath( $_ENV['TEMP']); }
+    $tempfile=tempnam(__FILE__,'');
+    if (file_exists($tempfile)) {
+      unlink($tempfile);
+      return realpath(dirname($tempfile));
+    }
+    return null;
+  }
 }
+
 ?>
