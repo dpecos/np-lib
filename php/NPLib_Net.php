@@ -119,4 +119,17 @@ function NP_json_encode($obj) {
 	}
 }
 
+function NP_get_server_url() {
+	$url = 'http';
+	if(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']=='on') {
+	    $url .=  's';
+	}
+	$url .=  '://';
+	if($_SERVER['SERVER_PORT']!='80')  {
+	    $url .= $_SERVER['HTTP_HOST'].':'.$_SERVER['SERVER_PORT'];
+	} else {
+	    $url .= $_SERVER['HTTP_HOST'];
+	}
+	return $url;
+}
 ?>

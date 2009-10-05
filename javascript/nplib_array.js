@@ -1,4 +1,4 @@
-Array.prototype.sort = function()
+/*Array.prototype.sort = function()
 {
    var tmp;
    for(var i=0;i<this.length;i++)
@@ -13,7 +13,7 @@ Array.prototype.sort = function()
            }
        }
    }
-};
+};*/
 
 Array.prototype.unshift = function(item)
 {
