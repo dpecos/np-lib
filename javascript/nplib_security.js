@@ -1,8 +1,3 @@
-/*function np_init_security() {
-   np_include("static/np-lib/security/AES.js");
-   np_include("static/np-lib/security/Hash.js");   
-}*/
-
 function np_hash(algorithm, text) {
    var hash = null;
    
