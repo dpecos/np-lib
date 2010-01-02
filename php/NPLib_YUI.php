@@ -100,8 +100,8 @@ class NP_YUI {
             draggable: true,
             constraintoviewport: true,
             text: "Add new <?= $class ?>",
-            modal: false,
-            close: true,
+            modal: true,
+            close: false,
             buttons: [ 
                 { text:"Cancel", handler:defaultButtonHandler },
                 { text:"Add", handler:add<?= $class ?>, isDefault:true } 
@@ -109,6 +109,14 @@ class NP_YUI {
             form: YAHOO.util.Dom.get("<?= $class ?>_form")
          });
       <?= $class ?>AddDialog.setHeader("Add <?= $class ?>");
+
+      if (<?= $class ?>Hooks["contextMenu"] != null) {
+      	var <?= $class ?>ContextMenu = new YAHOO.widget.ContextMenu("<?= $lower_class ?>_contextmenu", { trigger:<?= $lower_class ?>_datatable.getTbodyEl() });
+      	<?= $class ?>ContextMenu.addItems(<?= $class ?>Hooks["contextMenu"]["items"]);
+      	<?= $class ?>ContextMenu.render("<?= $class ?>_datatable");
+      	<?= $class ?>ContextMenu.clickEvent.subscribe(<?= $class ?>Hooks["contextMenu"]["handler"], <?= $lower_class ?>_datatable);
+      }
+
    }
    
    function show<?= $class ?>AddDialog() {
