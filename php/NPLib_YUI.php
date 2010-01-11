@@ -29,6 +29,12 @@ class NP_YUI {
       
       if (!array_key_exists("ajaxURL", $options))
           $options["ajaxURL"] = "./ajax/".$lower_class.".php";
+
+      if (!array_key_exists("ajaxParams", $options))
+          $options["ajaxParams"] = "";
+      else 
+          $options["ajaxParams"] = "&".$options["ajaxParams"];
+
       if (!array_key_exists("idFields", $options))
           $options["idFields"] = "id";
           
@@ -77,7 +83,7 @@ class NP_YUI {
          return oParsedResponse;
       }
       
-      <?= $lower_class ?>_datatable = new YAHOO.widget.DataTable("<?= $class ?>_datatable", <?= $class ?>ColumnDefs, <?= $lower_class ?>_dataSource, {initialRequest:"op=list"});
+      <?= $lower_class ?>_datatable = new YAHOO.widget.DataTable("<?= $class ?>_datatable", <?= $class ?>ColumnDefs, <?= $lower_class ?>_dataSource, {initialRequest:"op=list<?= $extraOptions["ajaxParams"] ?>"});
       <?= $lower_class ?>_datatable.subscribe("rowMouseoverEvent", <?= $lower_class ?>_datatable.onEventHighlightRow);
       <?= $lower_class ?>_datatable.subscribe("rowMouseoutEvent", <?= $lower_class ?>_datatable.onEventUnhighlightRow);
       <?= $lower_class ?>_datatable.subscribe("rowClickEvent", <?= $lower_class ?>_datatable.onEventSelectRow);
@@ -147,7 +153,7 @@ class NP_YUI {
             var count = <?= $lower_class ?>_datatable.getRecordSet().getLength();
             <?= $lower_class ?>_datatable.deleteRows(0,count);
       
-            <?= $lower_class ?>_dataSource.sendRequest("op=list", {success : <?= $lower_class ?>_datatable.onDataReturnAppendRows, scope: <?= $lower_class ?>_datatable})
+            <?= $lower_class ?>_dataSource.sendRequest("op=list<?= $extraOptions["ajaxParams"] ?>", {success : <?= $lower_class ?>_datatable.onDataReturnAppendRows, scope: <?= $lower_class ?>_datatable})
          }
    
       } else {
@@ -204,7 +210,7 @@ class NP_YUI {
             var count = <?= $lower_class ?>_datatable.getRecordSet().getLength();
             <?= $lower_class ?>_datatable.deleteRows(0, count);
       
-            <?= $lower_class ?>_dataSource.sendRequest("op=list", {success : <?= $lower_class ?>_datatable.onDataReturnAppendRows, scope: <?= $lower_class ?>_datatable})
+            <?= $lower_class ?>_dataSource.sendRequest("op=list<?= $extraOptions["ajaxParams"] ?>", {success : <?= $lower_class ?>_datatable.onDataReturnAppendRows, scope: <?= $lower_class ?>_datatable})
          }
       } else {
          box_error("<?= $class ?>del_result", response.responseText);
