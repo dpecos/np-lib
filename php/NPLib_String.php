@@ -21,21 +21,38 @@ function NP_endsWith($sub, $str) {
    return (substr($str, strlen($str) - strlen($sub)) === $sub);
 }
 
+
+function NP_fixUTF8_encoding($in_str)
+{
+        if(mb_detect_encoding($in_str) == "UTF-8" && mb_check_encoding($in_str,"UTF-8"))
+                return $in_str;
+        else
+                return utf8_encode($in_str);
+}
+
 function NP_UTF8_encode($obj) {
-	if (gettype($obj) == "array") {
-		foreach ($obj as $k => $v) {
-			$obj[$k] = NP_UTF8_encode($v);
-		}
-	} else if (gettype($obj) == "object") {
-		foreach (get_object_vars($obj) as $k => $v) {
-			$obj->$k = NP_UTF8_encode($v);
-		}
-	}
-	if (gettype($obj) == "string") {
-		return utf8_encode($obj);
-	} else {
-		return $obj;
-	}
+    if (gettype($obj) == "array") {
+        foreach ($obj as $k => $v) {
+            $obj[$k] = NP_UTF8_encode($v);
+        }
+    } else if (gettype($obj) == "object") {
+        foreach (get_object_vars($obj) as $k => $v) {
+            $obj->$k = NP_UTF8_encode($v);
+        }
+    }
+    if (gettype($obj) == "string") {
+        return NP_fixUTF8_encoding($obj);
+    } else {
+        return $obj;
+    }
+}
+
+function NP_fixUTF8_decoding($in_str)
+{
+        if(mb_detect_encoding($in_str) == "UTF-8" && mb_check_encoding($in_str,"UTF-8"))
+                return utf8_decode($in_str);
+        else
+                return $in_str;
 }
 
 function NP_UTF8_decode($obj) {
@@ -49,7 +66,7 @@ function NP_UTF8_decode($obj) {
 		}
 	}
 	if (gettype($obj) == "string") {
-		return utf8_decode($obj);
+		return NP_fixUTF8_decoding($obj);
 	} else {
 		return $obj;
 	}
