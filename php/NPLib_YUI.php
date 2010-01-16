@@ -18,7 +18,8 @@
  * {UI event}
  *  - InsertDialog: 
  *       boolean beforeInsertDialog()
- *       boolean afterInsertDialog(formObject)
+ *       boolean afterInsertDialog(formObject) (before afterInsert)
+ *       boolean onCloseAddDialog() (always called, even con cancel)
  *
  */
 
@@ -109,8 +110,10 @@ class NP_YUI {
             modal: true,
             close: false,
             buttons: [ 
-                { text:"Cancel", handler:defaultButtonHandler },
-                { text:"Add", handler:add<?= $class ?>, isDefault:true } 
+                { text:"Cancel", handler: function(event, dialogObject) {
+                     close<?= $class ?>AddDialog(true);
+                }},
+                { text:"Add", handler: add<?= $class ?>, isDefault:true } 
             ],
             form: YAHOO.util.Dom.get("<?= $class ?>_form")
          });
@@ -123,6 +126,16 @@ class NP_YUI {
       	<?= $class ?>ContextMenu.clickEvent.subscribe(<?= $class ?>Hooks["contextMenu"]["handler"], <?= $lower_class ?>_datatable);
       }
 
+   }
+ 
+   function close<?= $class ?>AddDialog(cancelled) {
+       <?= $class ?>AddDialog.hide();
+       if ( <?= $class ?>AddDialog.form) {
+             <?= $class ?>AddDialog.form.reset();
+       }
+       if (<?= $class ?>Hooks["onCloseAddDialog"] != null) {
+           setTimeout('<?= $class ?>Hooks["onCloseAddDialog"](' + cancelled + ')', 100);;
+       }
    }
    
    function show<?= $class ?>AddDialog() {
@@ -145,7 +158,7 @@ class NP_YUI {
    function add<?= $class ?>Callback(response) {
       
       if (response.responseText.trim() == "OK") {
-         <?= $class ?>AddDialog.hide();   
+         close<?= $class ?>AddDialog(false);   
          var formObject = document.getElementById('<?= $class ?>_form');
          formObject.reset();
          
