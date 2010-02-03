@@ -40,7 +40,7 @@ class NPLogger {
 		return "[".date("Y/m/d - H:i:s")." +".sprintf("%.3f", microtime(true) - NPLogger::$loggers[$name]["time"])." (".$session." - REQID: ".$_REQUEST["NP_log_rnd"].")] ".$msg."\n";	
 	}
 	
-	static function init($name, $file, $level, $formatter = null) {
+	static function init($name, $file, $level, $formatter = null, $enable_sql_explain_plan = true) {
 		if (!array_key_exists($name, NPLogger::$loggers) && (file_exists($file) && is_writable($file) || !file_exists($file))) {
 			NPLogger::$loggers[$name] = array();
 			NPLogger::$loggers[$name]["time"] = microtime(true);
@@ -64,6 +64,8 @@ class NPLogger {
 			NPLogger::$loggers[$name]["logfile"] = $file;
 
 			NPLogger::$loggers[$name]["level"] = $level;
+			
+			NPLogger::$loggers[$name]["enable_sql_explain_plan"] = $enable_sql_explain_plan;
 						
 			if (!array_key_exists("NP_log_rnd", $_REQUEST)) {
 				$request_id = NP_random_string(6);
@@ -91,11 +93,11 @@ class NPLogger {
 	}
 	
 	static function debug($name, $msg) { NPLogger::__log($name, "DEBUG", $msg); }
-	static function info($name, $msg) { NPLogger::__log($name, "INFO", $msg);}
+	static function info($name, $msg) { NPLogger::__log($name, "INFO", $msg); }
 	static function error($name, $msg) { NPLogger::__log($name, "ERROR", $msg); }
 	
 	static function logSQLQuery($name, $sql, $queryId = null, $dbCon = null) {
-		if ($queryId != null) {
+		if ($queryId !== null) {
 			$qData = NPLogger::$loggers[$name]["sqlData"][$queryId];
 			unset(NPLogger::$loggers[$name]["sqlData"]);
 			if ($dbCon != null)
@@ -107,19 +109,23 @@ class NPLogger {
 		} 
 	}
 	static function prepareSQLQuery($name, $sql) {
-		try {
-			$rs = mysql_query('EXPLAIN '.$sql);
-		} catch(Exception $e) { 
+		if (NPLogger::$loggers[$name]["enable_sql_explain_plan"] === true) {
+			try {
+				$rs = mysql_query('EXPLAIN '.$sql);
+			} catch(Exception $e) { 
+			}
+			$id = null;
+			if ($rs) {
+				$row = mysql_fetch_array($rs, MYSQL_ASSOC);
+				if (!array_key_exists("sqlData", NPLogger::$loggers[$name]))
+					NPLogger::$loggers[$name]["sqlData"] = array();
+				$id = NP_random_string(10);
+				NPLogger::$loggers[$name]["sqlData"][$id] = $row;
+			}
+			return $id;
+		} else {
+			return null;
 		}
-		$id = null;
-		if ($rs) {
-			$row = mysql_fetch_array($rs, MYSQL_ASSOC);
-			if (!array_key_exists("sqlData", NPLogger::$loggers[$name]))
-				NPLogger::$loggers[$name]["sqlData"] = array();
-			$id = NP_random_string(10);
-			NPLogger::$loggers[$name]["sqlData"][$id] = $row;
-		}
-		return $id;
 	}
 	
 	static function isEnabled() { return count(NPLogger::$loggers) > 0; }

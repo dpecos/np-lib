@@ -41,6 +41,7 @@ function sendMail($from, $to, $subject, $body) {
 }
 function NP_sendMail($from, $to, $subject, $body) {
     $mail = new htmlMimeMail();
+	$mail->setSMTPParams(ini_get('SMTP') , ini_get('smtp_port'));
     $mail->setFrom($from);
     $mail->setSubject($subject);
     $mail->setText($body);
@@ -60,6 +61,7 @@ function sendHTMLMail($from, $to, $subject, $body) {
 }
 function NP_sendHTMLMail($from, $to, $subject, $body) {
     $mail = new htmlMimeMail();
+    $mail->setSMTPParams(ini_get('SMTP') , ini_get('smtp_port'));
     $mail->setFrom($from);
     $mail->setSubject($subject);
     $mail->setHTML($body);

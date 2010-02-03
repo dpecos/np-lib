@@ -642,7 +642,7 @@ class NP_DDBB {
 		}
 
 		if (Logger::isEnabled()) {
-			$queryId = NPLogger::logSQLQuery("nplib", $sql, $queryId, null);
+			NPLogger::logSQLQuery("nplib", $sql, $queryId, null);
 			//$queryId = Logger::logSQLQuery($sql, $queryId, $this->$dbCon);
 		}
 
