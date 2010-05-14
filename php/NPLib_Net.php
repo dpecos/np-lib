@@ -36,15 +36,22 @@ function NP_redirect($page) {
 /**
  * @deprecated Use NP_sendMail instead
  */
-function sendMail($from, $to, $subject, $body) {
-   return NP_sendMail($from, $to, $subject, $body);
+function sendMail($from, $to, $subject, $body, $files=null) {
+   return NP_sendMail($from, $to, $subject, $body, $files);
 }
-function NP_sendMail($from, $to, $subject, $body) {
+function NP_sendMail($from, $to, $subject, $body, $files=null) {
     $mail = new htmlMimeMail();
 	$mail->setSMTPParams(ini_get('SMTP') , ini_get('smtp_port'));
     $mail->setFrom($from);
     $mail->setSubject($subject);
     $mail->setText($body);
+
+    if ($files != null) {
+        foreach ($files as $n => $f) {
+            $mail->addAttachment($mail->getFile($f), $n);
+        }
+    }
+
     if (is_array($to))
         $result = $mail->send($to);
     else
@@ -56,15 +63,22 @@ function NP_sendMail($from, $to, $subject, $body) {
 /**
  * @deprecated Use NP_sendHTMLMail instead
  */
-function sendHTMLMail($from, $to, $subject, $body) {
-   return NP_sendHTMLMail($from, $to, $subject, $body);
+function sendHTMLMail($from, $to, $subject, $body, $files=null) {
+   return NP_sendHTMLMail($from, $to, $subject, $body, $files);
 }
-function NP_sendHTMLMail($from, $to, $subject, $body) {
+function NP_sendHTMLMail($from, $to, $subject, $body, $files=null) {
     $mail = new htmlMimeMail();
     $mail->setSMTPParams(ini_get('SMTP') , ini_get('smtp_port'));
     $mail->setFrom($from);
     $mail->setSubject($subject);
     $mail->setHTML($body);
+
+    if ($files != null) {
+        foreach ($files as $n => $f) {
+            $mail->addAttachment($mail->getFile($f), $n);
+        }
+    }
+
     if (is_array($to))
         $result = $mail->send($to);
     else
@@ -133,5 +147,29 @@ function NP_get_server_url() {
 	    $url .= $_SERVER['HTTP_HOST'];
 	}
 	return $url;
+}
+
+function NP_send_form_by_mail($data, $from, $to, $subject, $exclude = null) {
+
+    $body = "DATOS DEL FORMULARIO\n====================\n";
+    foreach($data as $n => $v) {
+        if ($exclude == null || ($exclude != null && !in_array($n, $exclude))) {
+            $body .= strtoupper($n).": ".$v."\n";
+        }
+    }
+
+    $files = array();
+    foreach ($_FILES as $n => $v) {
+        $fname = tempnam(sys_get_temp_dir(), "nplib_");
+        move_uploaded_file($v['tmp_name'], $fname);
+        $files[$v['name']] = $fname;
+    }
+
+    NP_sendHTMLMail($from, $to, $subject, $body, $files);
+
+    foreach ($files as $n => $f) {
+        unlink($f);
+    }
+
 }
 ?>
