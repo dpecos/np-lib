@@ -157,19 +157,32 @@ function NP_send_form_by_mail($data, $from, $to, $subject, $exclude = null) {
             $body .= strtoupper($n).": ".$v."\n";
         }
     }
-
+   
+   	$errorFiles = false;
     $files = array();
-    foreach ($_FILES as $n => $v) {
-        $fname = tempnam(sys_get_temp_dir(), "nplib_");
-        move_uploaded_file($v['tmp_name'], $fname);
-        $files[$v['name']] = $fname;
-    }
 
-    NP_sendHTMLMail($from, $to, $subject, $body, $files);
+    foreach ($_FILES as $n => $v) {
+    		if ($v['error'] == 0) {
+		        $fname = tempnam(sys_get_temp_dir(), "nplib_");
+		        move_uploaded_file($v['tmp_name'], $fname);
+		        $files[$v['name']] = $fname;
+      	} else {
+      			$errorFiles = true;
+      			break;
+      	}
+    }
+    
+    $result = true;
+		if ($errorFiles) {
+			$result = false;
+		} else {
+    	NP_sendMail($from, $to, $subject, $body, $files);
+    }
 
     foreach ($files as $n => $f) {
         unlink($f);
     }
-
+		
+		return $result;
 }
 ?>
