@@ -102,7 +102,7 @@ class NP_DDBB {
          $this->dbTypes[$objType][$fieldName] = $sqlType;
          $this->dbSQL[$objType][$fieldName] = $sqlInfo;
       } else {
-         die("Unknown type ".$objType);
+         throw new Exception("Unknown type ".$objType);
       }
    }
    
@@ -586,9 +586,9 @@ class NP_DDBB {
    function connectServer () {
       if ($this->config != null) {
 	      $this->dbCon = mysql_connect ($this->config ["HOST"], $this->config ["USER"], $this->config ["PASSWD"])
-		      or die ("No se pudo conectar con la BBDD: ".mysql_error());
+		      or die("No se pudo conectar con la BBDD: ".mysql_error());
 	      mysql_select_db ($this->config ["NAME"])
-		      or die ("No se encontro la BBDD en el servidor.");
+		      or die("No se encontro la BBDD en el servidor.");
       }
    }
 
@@ -605,7 +605,7 @@ class NP_DDBB {
 	   $resultado = mysql_query($sql);
 
 	   if (!$resultado) {
-		   die("No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error());
+		   throw new Exception("No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error());
 		   //exit;
 	   }
 
@@ -637,7 +637,7 @@ class NP_DDBB {
 		if (!$resultado) {
 			$msg = "No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error();
 			NPLogger::error("nplib", $msg);
-			die($msg);
+			throw new Exception($msg);
 			//exit;
 		}
 
@@ -678,7 +678,7 @@ class NP_DDBB {
 	   $resultado = mysql_query($sql);
 	
 	   if (!$resultado) {
-		   die("No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error());
+		   throw new Exception("No pudo ejecutarse satisfactoriamente la consulta ($sql) en la BD: " . mysql_error());
 		   //exit;
 	   }
 	
@@ -714,7 +714,7 @@ class NP_DDBB {
                   case "INT": $fType = "int"; break;
                   case "FLOAT": $fType = "float"; break;
                   case "STRING": $fType = "varchar"; break;
-                  case "TEXT": $fType = "text"; break;
+                  case "TEXT": $fType = "longtext"; break;
                   case "BOOL": $fType = "boolean"; break;             
                   case "DATE": $fType = "timestamp"; break;
                }
