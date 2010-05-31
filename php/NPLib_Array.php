@@ -8,7 +8,7 @@
 * @update    22:02 3/7/2009
 * @author    Rivanoor Bren <id_ivan(at)yahoo.com>
 ---------------------- */
-function array_flatten($array, $preserve = FALSE, $r = array()){
+function NP_array_flatten($array, $preserve = FALSE, $r = array()){
     foreach($array as $key => $value){
         if (is_array($value)){
             foreach($value as $k => $v){
