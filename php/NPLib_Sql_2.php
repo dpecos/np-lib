@@ -526,6 +526,8 @@ class NP_DDBB {
       			else 
       			    return "NULL";
       		  }
+           } else if ($sqlType == "DATA") {
+               return "'".mysql_escape_string(serialize($strVal))."'";
 		   } else if ($sqlType == "BOOL") {
 			   if (isset($strVal) && $strVal != "") {
 			       if (strtolower($strVal) == "true")
@@ -556,6 +558,8 @@ class NP_DDBB {
 		       return $strVal;
 		   } else if ($sqlType == "STRING_I18N" || $sqlType == "TEXT_I18N") {
 		       return NP_DDBB::decodeI18NSqlValue($strVal);
+           } else if ($sqlType == "DATA") {
+               return unserialize($strVal);
 		   } else if ($sqlType == "BOOL") 
 			   if (isset($strVal) && $strVal != "")
 				   return ($strVal == "1");
@@ -715,6 +719,7 @@ class NP_DDBB {
                   case "FLOAT": $fType = "float"; break;
                   case "STRING": $fType = "varchar"; break;
                   case "TEXT": $fType = "longtext"; break;
+                  case "DATA": $fType = "longtext"; break;
                   case "BOOL": $fType = "boolean"; break;             
                   case "DATE": $fType = "timestamp"; break;
                }
