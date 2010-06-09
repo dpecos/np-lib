@@ -12,8 +12,7 @@
  * @copyright Copyright (c) Daniel Pecos Martínez 
  * @license http://www.gnu.org/licenses/lgpl.html  LGPL License
  */
-require_once("NPLib_Common.php");
-require_once("mail/htmlMimeMail.php");
+require_once($NPLIB_PATH."extlib/mail/htmlMimeMail.php");
 
 function NP_redirect($page) {
    if (isset($_ENV['HTTP_HOST']) && isset($_ENV["SCRIPT_URL"])) {
@@ -122,17 +121,9 @@ function NP_url_decode($obj) {
 
 function NP_json_encode($obj) {
 	if (gettype($obj) == "object")
-		if (version_compare(phpversion(), '5.0') < 0)
-			$obj = $obj;
-		else
-			$obj = clone($obj);
+		$obj = NP_clone($obj);
 				
-	if (function_exists("json_encode")) {
-		return json_encode(NP_UTF8_encode($obj));
-	} else {
-		require_once 'Zend/Json.php';
-		return Zend_Json::encode(NP_UTF8_encode($obj));
-	}
+    return json_encode(NP_UTF8_encode($obj));
 }
 
 function NP_get_server_url() {

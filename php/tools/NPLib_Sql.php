@@ -16,11 +16,6 @@
 /**
  * @ignore
  */
-require_once("NPLib_Common.php");
-
-/**
- * @ignore
- */
 $npsql_dbconfig = null;
 
 /**

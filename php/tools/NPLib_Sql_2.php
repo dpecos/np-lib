@@ -12,7 +12,6 @@
  * @copyright Copyright (c) Daniel Pecos Martínez 
  * @license http://www.gnu.org/licenses/lgpl.html  LGPL License
  */
-require_once("NPLib_Common.php");
 
 class NP_DDBB {
    

@@ -42,4 +42,10 @@ if ( !function_exists('sys_get_temp_dir')) {
   }
 }
 
+if ( !function_exist('json_encode')) {
+  function json_encode($obj) {
+    require_once($NPLIB_PATH."extlib/Zend/Json.php");
+	return Zend_Json::encode(NP_UTF8_encode($obj));
+  }
+}
 ?>
