@@ -5,7 +5,7 @@ class NP_SQLObject {
     public function __construct($ddbb) {
         $this->_ddbb = $ddbb;
         
-        $this->__guessSQLstructure()
+        $this->__guessSQLstructure();
     }
     
     private function _guessSQLstructure() {
