@@ -48,9 +48,9 @@ class NP_Image {
         fclose($file);
 
         if (NP_endsWith(".jpg", $path) || NP_endsWith($path, ".jpeg", $path)) {
-            return imagejpeg($this->original_image, $path);
+            return imagejpeg($this->original_image, $path, 100);
         } else if (NP_endswith(".png", $path)) {
-            return imagepng($this->original_image, $path);
+            return imagepng($this->original_image, $path, 100);
         }
     }
 
