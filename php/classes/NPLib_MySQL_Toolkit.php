@@ -43,7 +43,7 @@ class NP_MySQL_Toolkit {
 			if (!is_array($strVal)) {
 				$strVal = trim($strVal);
 			}
-				
+
 			if ($sqlType == "STRING" || $sqlType == "TEXT") {
 				if (strlen(trim($strVal)) == 0) {
 					return "NULL";
@@ -185,11 +185,15 @@ class NP_MySQL_Toolkit {
 		// get only non-PK fields
 		$sqlObject->walk(function($fName, $fValue, $fType, &$q) {
 			if (!($fType["PK"])) {
-				$q .= $fName.", ";
+				if ($sqlType == "DATE") {
+					$q .= "UNIX_TIMESTAMP(".$fName.") AS ".$fName;
+				} else {
+					$q .= $fName.", ";
+				}
 			}
 		}, array(&$q));
-
 		$q = substr($q, 0, strlen($q) - 2);
+
 		$q .= " FROM ".$sqlObject->getMetadata("tableName")." WHERE ";
 
 		// restricted to PK fields
@@ -206,25 +210,28 @@ class NP_MySQL_Toolkit {
 		$sqlObject->getConnection()->disconnect();
 
 		// fill object with results
-		$objectStructure = $sqlObject->getMetadata("structure");
-		foreach ($data[0] as $name => $value) {
-			$sqlObject->$name = NP_MySQL_Toolkit::decodeSQLValue($value, $objectStructure[$name]["TYPE"]);
+		if ($data !== null && count($data) > 0) {
+			$objectStructure = $sqlObject->getMetadata("structure");
+			foreach ($data[0] as $name => $value) {
+				$sqlObject->$name = NP_MySQL_Toolkit::decodeSQLValue($value, $objectStructure[$name]["TYPE"]);
+			}
+			return true;
+		} else {
+			return false;
 		}
 	}
 
 	public static function insertObject($sqlObject) {
-		// build SQL SELECT query
+		// build SQL INSERT query
 		$q = "INSERT INTO ".$sqlObject->getMetadata("tableName")." (";
 
-		// get only non-PK fields
 		$sqlObject->walk(function($fName, $fValue, $fType, &$q) {
 			$q .= $fName.", ";
 		}, array(&$q));
-
 		$q = substr($q, 0, strlen($q) - 2);
+
 		$q .= ") VALUES (";
 
-		//
 		$sqlObject->walk(function($fName, $fValue, $fType, &$q) {
 			$q .= NP_MySQL_Toolkit::encodeSQLValue($fValue, $fType["TYPE"]).", ";
 		}, array(&$q));
@@ -243,7 +250,60 @@ class NP_MySQL_Toolkit {
 					$sqlObject->$name = $auto_increment;
 				}
 			}
+			return $auto_increment;
+		} else {
+			return true;
 		}
+	}
+
+	public static function updateObject($sqlObject) {
+		// build SQL UPDATE query
+		$q = "UPDATE ".$sqlObject->getMetadata("tableName")." SET ";
+
+		// get only non-PK fields
+		$sqlObject->walk(function($fName, $fValue, $fType, &$q) {
+			if (!($fType["PK"])) {
+				$q .= $fName." = ".NP_MySQL_Toolkit::encodeSQLValue($fValue, $fType["TYPE"]).", ";
+			}
+		}, array(&$q));
+		$q = substr($q, 0, strlen($q) - 2);
+
+		$q .= " WHERE ";
+
+		// restricted to PK fields
+		$sqlObject->walk(function($fName, $fValue, $fType, &$q) {
+			if (($fType["PK"])) {
+				$q .= $fName." = ".NP_MySQL_Toolkit::encodeSQLValue($fValue, $fType["TYPE"])." AND ";
+			}
+		}, array(&$q));
+		$q = substr($q, 0, strlen($q) - 4);
+
+		// launch query
+		$sqlObject->getConnection()->connect();
+		$result = $sqlObject->getConnection()->query($q);
+		$sqlObject->getConnection()->disconnect();
+
+		return $result === 1;
+	}
+
+	public static function deleteObject($sqlObject) {
+		// build SQL DELETE query
+		$q = "DELETE FROM ".$sqlObject->getMetadata("tableName")." WHERE ";
+
+		// restricted to PK fields
+		$sqlObject->walk(function($fName, $fValue, $fType, &$q) {
+			if (($fType["PK"])) {
+				$q .= $fName." = ".NP_MySQL_Toolkit::encodeSQLValue($fValue, $fType["TYPE"])." AND ";
+			}
+		}, array(&$q));
+		$q = substr($q, 0, strlen($q) - 4);
+
+		// launch query
+		$sqlObject->getConnection()->connect();
+		$result = $sqlObject->getConnection()->query($q);
+		$sqlObject->getConnection()->disconnect();
+
+		return $result === 1;
 	}
 }
 ?>

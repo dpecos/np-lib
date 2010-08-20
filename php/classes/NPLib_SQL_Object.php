@@ -62,12 +62,12 @@ class NP_SQL_Object {
 	
 	public function update() {
 		$toolkit = $this->getMetadata("toolkit");
-		//return $toolkit::updateObject($this, $this->connection);
+		return $toolkit::updateObject($this);
 	}
 	
 	public function delete() {
 		$toolkit = $this->getMetadata("toolkit");
-		//return $toolkit::deleteObject($this, $this->connection);
+		return $toolkit::deleteObject($this);
 	}
 }
 ?>
