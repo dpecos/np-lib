@@ -104,7 +104,7 @@ function NP_get_i18n($strings) {
         return null;
 }
 
-function NP_set_i18n($strings, $val = null, $lang = null) {
+function NP_set_i18n(&$strings, $val = null, $lang = null) {
     if (is_string($strings)) {
         $tmp = NP_DDBB::decodeI18NSqlValue($strings);
         if (is_array($tmp))
@@ -114,20 +114,27 @@ function NP_set_i18n($strings, $val = null, $lang = null) {
     }
    
     if (is_array($strings)) {
-        if ($val === null && $lang !== null)
-            unset($strings[$lang]);
-        else {
-            if ($lang === null) 
+        if ($val === null && $lang !== null) {
+        	if ($lang === null) {
+            	unset($strings[NP_LANG]);
+        	} else { 
+            	unset($strings[$lang]);
+        	}
+        } else {
+			echo $val;
+            if ($lang === null) {
                 $strings[NP_LANG] = $val;
-            else
+            } else {
                 $strings[$lang] = $val;
+            }
         }
         return $strings;   
     } else {
-        if (!is_null($strings))
+        if (!is_null($strings)) {
             return $strings;
-        else
+        } else {
             return $val;
+        }
     }
 }
 ?>

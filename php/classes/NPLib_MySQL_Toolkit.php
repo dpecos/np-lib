@@ -54,7 +54,7 @@ class NP_MySQL_Toolkit {
 				if (is_null($strVal) || is_array($strVal) && count($strVal) == 0) {
 					return "NULL";
 				} else {
-					$val = NP_DDBB::encodeI18NSqlValue($strVal);
+					$val = self::encodeI18NSqlValue($strVal);
 					if (!is_null($val)) {
 						return "'".mysql_escape_string($val)."'";
 					} else {
@@ -94,7 +94,7 @@ class NP_MySQL_Toolkit {
 			if ($sqlType == "STRING" || $sqlType == "TEXT") {
 				return $strVal;
 			} else if ($sqlType == "STRING_I18N" || $sqlType == "TEXT_I18N") {
-				return NP_DDBB::decodeI18NSqlValue($strVal);
+				return self::decodeI18NSqlValue($strVal);
 			} else if ($sqlType == "DATA") {
 				return unserialize($strVal);
 			} else if ($sqlType == "BOOL")
@@ -127,15 +127,17 @@ class NP_MySQL_Toolkit {
 		}
 	}
 
-	public static function describeTable($sqlObject) {
+	public static function describeTable($sqlClass) {
 		$tableInfo = array();
 
 		// Get table info
-		$structure = $sqlObject->getConnection()->q('DESCRIBE '.$sqlObject->getMetadata("tableName"));
+		//$structure = $sqlClass::getConnection()->q('DESCRIBE '.$sqlClass::getMetadata("tableName"));
+		$structure = $sqlClass::getConnection()->q('SHOW FULL COLUMNS FROM '.$sqlClass::getMetadata("tableName"));
 
 		// Get table description
 		foreach ($structure as $fields) {
-			$typeAndLength = NP_MySQL_Toolkit::convertSQLType($fields["Type"]);
+			//print_r($fields);
+			$typeAndLength = NP_MySQL_Toolkit::convertSQLType($fields["Type"], $fields['Comment']);
 			$tableInfo[$fields["Field"]] = array(
 				"TYPE" => $typeAndLength[0],
 				"LENGTH" => $typeAndLength[1],
@@ -144,13 +146,13 @@ class NP_MySQL_Toolkit {
 				"DEFAULT" => $fields["Default"],
 				"AUTO_INCREMENT" => strpos($fields["Extra"], 'auto_increment') !== false
 			);
-			$sqlObject->$fields["Field"] = null;
+			//$sqlObject->$fields["Field"] = null;
 		}
 
 		return $tableInfo;
 	}
 
-	public static function convertSQLType($type) {
+	private static function convertSQLType($type, $comment) {
 		$result = null;
 
 		$t = array();
@@ -163,12 +165,22 @@ class NP_MySQL_Toolkit {
 		} else if ($type === "float") {
 			$result = array ("FLOAT", null);
 		} else if ($type === "varchar") {
-			$result = array ("STRING", $lenght);
-			//I18N?
+			if (strpos($comment,"NP:I18N") !== false) {
+				$result = array ("STRING_I18N", $lenght);
+			} else {
+				$result = array ("STRING", $lenght);
+			}
 		} else if ($type === "text" || $type === "longtext") {
-			$result = array("TEXT", $length);
-			//DATA?
-			//I18N?
+			$type = null;
+			if (strpos($comment,"NP:DATA") !== false) {
+				$result = array("DATA", $length);
+			} else {
+				if (strpos($comment,"NP:I18N") !== false) {
+					$result = array ("TEXT_I18N", $lenght);
+				} else {
+					$result = array("TEXT", $length);
+				}
+			}
 		} else if ($type === "boolean") {
 			$result = array("BOOL", null);
 		} else if ($type === "timestamp") {
@@ -304,6 +316,35 @@ class NP_MySQL_Toolkit {
 		$sqlObject->getConnection()->disconnect();
 
 		return $result === 1;
+	}
+
+	public static function listObjects($sqlClass, $query = null) {
+		// if not query given, return all records
+		if ($query == null) {
+			$query = "SELECT * FROM ".$sqlClass::getMetadata("tableName");
+		}
+
+		// launch query
+		$conn = $sqlClass::getConnection();
+		$conn->connect();
+		$data = $conn->query($query);
+		$conn->disconnect();
+
+		// fill list of object with results
+		if ($data !== null && count($data) > 0) {
+			$result = array();
+			$structure = $sqlClass::getMetadata("structure");
+			foreach ($data as $row) { 
+				$obj = new $sqlClass();
+				foreach ($row as $name => $value) {
+					$obj->$name = NP_MySQL_Toolkit::decodeSQLValue($value, $structure[$name]["TYPE"]);
+				}
+				$result[] = $obj;
+			}
+			return $result;
+		} else {
+			return null;
+		}
 	}
 }
 ?>
